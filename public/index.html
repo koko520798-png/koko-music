@@ -28,7 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 /* ====== 底部tab ====== */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--border);
   padding:0 0 env(safe-area-inset-bottom,0);display:flex}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:15px;font-weight:500;color:var(--text2);gap:3px;transition:color .2s}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:15px;font-weight:700;color:var(--text2);gap:3px;transition:color .2s}
 .tab.active{color:var(--active)}
 /* ====== 主内容 ====== */
 .main{padding-top:calc(env(safe-area-inset-top,0) + 54px);padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
@@ -37,8 +37,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 /* ====== 播放页 ====== */
 .tnc-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:3px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
 .tnc-btn svg{width:17px;height:17px;fill:currentColor}
+/* 左边返回按钮大一点 */
+.tnc-back svg{width:18px;height:18px}
 .tnc-mid{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
-.tnc-mid svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tnc-mid svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 设置按钮专属：描边gear */
 .tnc-settings svg{fill:none !important;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 5卡叠叠拍立得轮播（绝对定位叠加） */
@@ -68,8 +70,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-item.center .cover-inner{width:136px;height:136px;border-radius:16px}
 /* 歌词3行（小字） */
 .lyrics{text-align:center;padding:4px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;overflow:hidden}
-.lyric-line{font-size:11px;color:var(--text2);line-height:1.4;opacity:.4;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.lyric-line.active{opacity:1;color:var(--pink-deep);font-weight:600;font-size:12px;line-height:1.4}
+.lyric-line{font-size:11px;color:var(--text2);line-height:1.4;opacity:.35;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;filter:blur(.4px)}
+.lyric-line.active{opacity:1;font-weight:600;font-size:12px;line-height:1.4;filter:none}
+.lyric-line.active span{color:var(--text2);transition:color .15s}
+.lyric-line.active span.lit{color:var(--pink-deep)}
 /* 控制胶囊（参考图二：更薄，无时间，爱心圈） */
 .controls-capsule{margin:6px 28px 0;padding:7px 12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.75);-webkit-backdrop-filter:blur(28px) saturate(180%) brightness(1.08);backdrop-filter:blur(28px) saturate(180%) brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.70),0 2px 14px rgba(0,0,0,.09);border:.5px solid rgba(255,255,255,.50);border-radius:999px}
 .ctrl-left{display:flex;align-items:center;gap:1px;flex-shrink:0}
@@ -99,8 +103,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .si-info{flex:1;min-width:0}
 .si-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .si-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.si-play-icon{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2)}
-.si-play-icon svg{width:12px;height:12px;fill:currentColor;margin-left:2px}
+.si-play-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text2)}
+.si-play-icon svg{width:20px;height:20px;fill:currentColor;margin-left:2px}
 /* ====== 搜索页 ====== */
 .search-page{padding:16px}
 .search-bar{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:0 16px;gap:8px;margin-bottom:16px}
@@ -187,10 +191,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
   animation:drawHeart 1.6s ease-in-out infinite
 }
 @keyframes drawHeart{
-  0%{stroke-dashoffset:85;opacity:.5}
-  60%{stroke-dashoffset:0;opacity:1}
-  80%{stroke-dashoffset:0;opacity:1}
-  100%{stroke-dashoffset:85;opacity:.5}
+  0%{stroke-dashoffset:85;opacity:.7}
+  100%{stroke-dashoffset:-85;opacity:.7}
 }
 /* ====== 空状态 ====== */
 .empty{text-align:center;padding:48px 24px;color:var(--text2)}
@@ -201,7 +203,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
 <!-- 全局顶部小胶囊（替代原导航栏，三个页面共用） -->
 <div class="top-nav-capsule">
-      <button class="tnc-btn" onclick="history.back()">
+      <button class="tnc-btn tnc-back" onclick="history.back()">
         <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
       </button>
       <!-- 中间：播放页=随机/循环切换图标，其他页=页面名称 -->
@@ -276,10 +278,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         </div>
       </div>
       <div class="ctrl-right">
-        <!-- 对话气泡（评论） -->
+        <!-- 对话气泡+引号（评论） -->
         <button class="ctrl-btn" onclick="showToast('评论功能即将上线')">
-          <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <text x="11.5" y="13" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" stroke="none" style="font-family:serif">"</text>
           </svg>
         </button>
         <!-- bullet list（带小圆点的歌单） -->
@@ -474,6 +477,7 @@ async function playCur() {
   if (!playlist.length) return;
   const song = playlist[curIdx];
   updateSongUI(song);
+  updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
   try {
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
@@ -514,13 +518,50 @@ async function loadLyric(id) {
   document.getElementById('lyric-cur').textContent  = '🎵';
   document.getElementById('lyric-next').textContent = '　';
   try {
-    const d = await api('/lyric', { id });
-    const raw = d.lrc?.lyric || '';
-    lyricLines = parseLyric(raw);
+    // 优先尝试 /lyric/new 获取逐字yrc格式
+    const d = await api('/lyric/new', { id });
+    const yrcRaw = d.yrc?.lyric || '';
+    if (yrcRaw) {
+      lyricLines = parseYrc(yrcRaw);
+    } else {
+      // fallback：普通lrc
+      const lrcRaw = d.lrc?.lyric || '';
+      lyricLines = parseLyric(lrcRaw);
+    }
     if (!lyricLines.length) {
       document.getElementById('lyric-cur').textContent = '暂无歌词';
     }
-  } catch(e) {}
+  } catch(e) {
+    // 接口报错fallback到/lyric
+    try {
+      const d2 = await api('/lyric', { id });
+      lyricLines = parseLyric(d2.lrc?.lyric || '');
+    } catch(e2) {}
+  }
+}
+
+// 解析yrc逐字格式（网易云）
+// 格式：[行startMs,行durMs,0]<字startMs,字durMs,0>字内容
+function parseYrc(raw) {
+  const lines = [];
+  raw.split('\n').forEach(line => {
+    const lineM = line.match(/^\[(\d+),\d+,\d+\](.*)/);
+    if (!lineM) return;
+    const lineStart = parseInt(lineM[1]) / 1000;
+    const content = lineM[2];
+    const words = [];
+    const re = /<(\d+),(\d+),\d+>([^<]*)/g;
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      const txt = m[3];
+      if (!txt) continue;
+      words.push({ start: parseInt(m[1]) / 1000, end: (parseInt(m[1]) + parseInt(m[2])) / 1000, text: txt });
+    }
+    if (words.length) {
+      lines.push({ time: lineStart, words, text: words.map(w => w.text).join('') });
+    }
+  });
+  return lines;
 }
 
 function parseLyric(raw) {
@@ -528,7 +569,7 @@ function parseLyric(raw) {
     const m = line.match(/\[(\d+):(\d+)\.(\d+)\](.*)/);
     if (!m) return null;
     const t = parseInt(m[1]) * 60 + parseFloat(m[2] + '.' + m[3]);
-    return { time: t, text: m[4].trim() };
+    return { time: t, text: m[4].trim(), words: null };
   }).filter(Boolean);
 }
 
@@ -542,14 +583,27 @@ audio.addEventListener('timeupdate', () => {
   const ttEl = document.getElementById('totalTime');
   if (ctEl) ctEl.textContent = fmt(cur);
   if (ttEl) ttEl.textContent = fmt(dur);
-  // 歌词同步（3行）
+  // 歌词同步（3行，逐字高亮）
   if (lyricLines.length) {
     let active = 0;
     for (let i = 0; i < lyricLines.length; i++) {
       if (lyricLines[i].time <= cur) active = i;
     }
-    document.getElementById('lyric-prev').textContent = lyricLines[active-1]?.text || '　';
-    document.getElementById('lyric-cur').textContent  = lyricLines[active]?.text  || '　';
+    // 上一行（暗+虚）
+    const prevEl = document.getElementById('lyric-prev');
+    prevEl.textContent = lyricLines[active-1]?.text || '　';
+    // 当前行（逐字高亮）
+    const curEl = document.getElementById('lyric-cur');
+    const line = lyricLines[active];
+    if (line?.words?.length) {
+      curEl.innerHTML = line.words.map(w => {
+        const lit = cur >= w.start;
+        return `<span class="${lit ? 'lit' : ''}">${w.text}</span>`;
+      }).join('');
+    } else {
+      curEl.textContent = line?.text || '　';
+    }
+    // 下一行（暗+虚）
     document.getElementById('lyric-next').textContent = lyricLines[active+1]?.text || '　';
   }
 });
@@ -609,19 +663,39 @@ function togglePlayMode() {
   showToast(labels[playMode]);
 }
 function toggleMode() { togglePlayMode(); } // 兼容旧调用
-// 爱心默认实心（已收藏态），点击切换到空心（未收藏），再点切回实心
+// 爱心状态：根据实际收藏判断
 let isFaved = false;
+let likedSongIds = new Set(); // 心动歌单ID集合
 const FAV_SOLID = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
 const FAV_OUTLINE = 'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z';
+
+async function loadLikedSongs() {
+  if (!cookie || !userInfo?.userId) return;
+  try {
+    const d = await api('/likelist', { uid: userInfo.userId });
+    likedSongIds = new Set(d.ids || []);
+  } catch(e) {}
+}
+
+function updateFavIcon() {
+  const songId = playlist[curIdx]?.id;
+  isFaved = songId ? likedSongIds.has(songId) : false;
+  const icon = document.getElementById('favIcon');
+  if (icon) icon.querySelector('path').setAttribute('d', isFaved ? FAV_SOLID : FAV_OUTLINE);
+}
+
 async function toggleFav() {
   isFaved = !isFaved;
   const icon = document.getElementById('favIcon');
   icon.querySelector('path').setAttribute('d', isFaved ? FAV_SOLID : FAV_OUTLINE);
   showToast(isFaved ? '❤ 加入心动歌单' : '取消收藏');
-  // 调用网易云/like API
   const songId = playlist[curIdx]?.id;
-  if (songId && cookie) {
-    try { await api('/like', { id: songId, like: isFaved }); } catch(e) {}
+  if (songId) {
+    if (isFaved) likedSongIds.add(songId);
+    else likedSongIds.delete(songId);
+    if (cookie) {
+      try { await api('/like', { id: songId, like: isFaved }); } catch(e) {}
+    }
   }
 }
 
@@ -762,6 +836,7 @@ async function openLogin() {
           if (cookie) {
             localStorage.setItem('nease_cookie', cookie);
             await fetchUserInfo();
+            loadLikedSongs(); // 异步加载心动歌单，不阻塞登录流程
             closeLogin();
             showToast('🎉 登录成功！');
             renderMyPage();
@@ -929,6 +1004,7 @@ function showToast(msg) {
 window.addEventListener('DOMContentLoaded', () => {
   updateModeIcon(); // 初始化顶部胶囊模式图标
   if (cookie && userInfo) {
+    loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
   }
 });
