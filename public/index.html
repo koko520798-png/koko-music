@@ -43,6 +43,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .tnc-mid svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 设置按钮专属：描边gear */
 .tnc-settings svg{fill:none !important;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* koko歌单按钮：描边圆圈➕ */
+.ctrl-btn.koko-btn svg{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 5卡叠叠拍立得轮播（绝对定位叠加） */
 .cover-carousel{position:relative;height:230px;padding:10px 0 0;overflow:visible;touch-action:pan-y;user-select:none}
 .covers-track{position:relative;width:100%;height:100%}
@@ -293,9 +295,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
       </div>
       <div class="ctrl-right">
         <!-- 加入/移除koko歌单 -->
-        <button class="ctrl-btn" id="kokoBtn" onclick="toggleKoko()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="8.5"/>
+        <button class="ctrl-btn koko-btn" id="kokoBtn" onclick="toggleKoko()">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8"/>
             <line x1="12" y1="9" x2="12" y2="15"/>
             <line x1="9" y1="12" x2="15" y2="12"/>
           </svg>
