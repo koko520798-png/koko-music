@@ -92,14 +92,43 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .ri-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ri-add{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--pink-deep);cursor:pointer}
 /* ====== 我的页 ====== */
-.my-page{padding:16px}
-.user-card{background:var(--card);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);margin-bottom:20px}
-.user-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--pink),var(--pink-deep));display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
-.user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-info{flex:1}
-.user-name{font-size:17px;font-weight:700}
-.user-sub{font-size:13px;color:var(--text2);margin-top:4px}
-.login-prompt{background:var(--card);border-radius:16px;padding:32px;text-align:center;box-shadow:var(--shadow);margin-bottom:20px}
+.my-page{padding:0;overflow-y:auto}
+.my-header{background:linear-gradient(180deg,rgba(242,168,192,.45) 0%,transparent 100%);padding:28px 20px 20px;text-align:center}
+.my-avatar-img{width:84px;height:84px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 4px 16px rgba(224,112,144,.3);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pink),var(--pink-deep));font-size:36px}
+.my-avatar-img img{width:100%;height:100%;object-fit:cover}
+.my-nickname{font-size:20px;font-weight:700;margin-bottom:4px}
+.my-badges{font-size:12px;color:var(--text2);margin-bottom:14px}
+.my-stats{display:flex;justify-content:center}
+.stat-item{flex:0 0 80px;text-align:center;padding:0 4px}
+.stat-num{font-size:17px;font-weight:700}
+.stat-label{font-size:11px;color:var(--text2);margin-top:2px}
+/* 快捷按钮 */
+.my-quick{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:14px 12px;background:var(--card);margin-bottom:10px}
+.q-btn{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px 0}
+.q-icon{width:44px;height:44px;border-radius:14px;background:#fdf0f5;display:flex;align-items:center;justify-content:center;font-size:20px}
+.q-label{font-size:11px;color:var(--text2)}
+/* 我的内容tabs */
+.my-tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);padding:0 20px;margin-bottom:0}
+.my-tab{flex:1;max-width:80px;text-align:center;padding:12px 0;font-size:14px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.my-tab.active{color:var(--pink-deep);border-bottom-color:var(--pink-deep);font-weight:600}
+/* 歌单 */
+.my-playlist-area{background:var(--card);padding-bottom:80px}
+.my-fav-row{display:flex;align-items:center;padding:14px 16px;gap:12px;cursor:pointer;border-bottom:1px solid var(--border)}
+.my-fav-cover{width:50px;height:50px;border-radius:8px;background:linear-gradient(135deg,#ff6b8a,#e0407a);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.my-fav-info{flex:1}
+.my-fav-name{font-size:15px;font-weight:600}
+.my-fav-count{font-size:12px;color:var(--text2);margin-top:2px}
+.my-fav-mode{font-size:11px;color:var(--pink-deep);white-space:nowrap}
+.my-pl-item{display:flex;align-items:center;padding:12px 16px;gap:12px;cursor:pointer;transition:.15s;border-bottom:1px solid var(--border)}
+.my-pl-item:active{background:var(--bg)}
+.my-pl-cover{width:50px;height:50px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,var(--pink),var(--pink-deep));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.my-pl-cover img{width:100%;height:100%;object-fit:cover}
+.my-pl-info{flex:1;min-width:0}
+.my-pl-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.my-pl-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.my-new-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.my-new-icon{width:50px;height:50px;border-radius:8px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text2);flex-shrink:0}
+.login-prompt{padding:40px 20px;text-align:center}
 .login-prompt p{color:var(--text2);font-size:14px;margin-bottom:16px}
 .qr-wrap{margin:16px auto;width:180px;height:180px;border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff}
 .qr-wrap img{width:100%;height:100%}
@@ -526,11 +555,14 @@ async function openLogin() {
     qrTimer = setInterval(async () => {
       try {
         const s = await api('/login/qr/check', { key: unikey });
+        // 调试：显示当前状态
+        document.getElementById('qrTip').textContent = `状态 ${s.code} | cookie:${(s.cookie||'').slice(0,20)} | _ck:${(s._cookie||'').slice(0,20)}`;
         if (s.code === 803) {
           clearInterval(qrTimer);
           // 登录成功：从响应体取 cookie，解析成纯 name=value 格式（去掉 Max-Age/Path 等）
           const rawCookie = s._cookie || s.cookie || '';
           cookie = parseCookieForHeader(rawCookie);
+          document.getElementById('qrTip').textContent = `803✓ raw:${rawCookie.slice(0,30)} → parsed:${cookie.slice(0,30)}`;
           if (cookie) {
             localStorage.setItem('nease_cookie', cookie);
             await fetchUserInfo();
@@ -573,32 +605,89 @@ async function renderMyPage() {
   if (!cookie || !userInfo) {
     el.innerHTML = `
       <div class="login-prompt">
+        <div style="font-size:64px;margin-bottom:16px">🎵</div>
         <p>登录网易云账号，同步你的歌单</p>
         <button class="login-btn" onclick="openLogin()">扫码登录</button>
       </div>`;
     return;
   }
-  const avatar = userInfo.avatarUrl ? `<img src="${userInfo.avatarUrl}">` : '🎵';
+  const avatarHtml = userInfo.avatarUrl ? `<img src="${userInfo.avatarUrl}">` : '🎵';
   el.innerHTML = `
-    <div class="user-card">
-      <div class="user-avatar">${avatar}</div>
-      <div class="user-info">
-        <div class="user-name">${userInfo.nickname}</div>
-        <div class="user-sub">Lv.${userInfo.level || 1} · ${userInfo.followeds || 0} 粉丝</div>
+    <div class="my-header">
+      <div class="my-avatar-img">${avatarHtml}</div>
+      <div class="my-nickname">${userInfo.nickname || ''}</div>
+      <div class="my-badges" id="myBadges">0枚徽章</div>
+      <div class="my-stats">
+        <div class="stat-item"><div class="stat-num" id="statFollows">-</div><div class="stat-label">关注</div></div>
+        <div class="stat-item"><div class="stat-num" id="statFolloweds">-</div><div class="stat-label">粉丝</div></div>
+        <div class="stat-item"><div class="stat-num" id="statLevel">-</div><div class="stat-label">等级</div></div>
+        <div class="stat-item"><div class="stat-num" id="statListen">-</div><div class="stat-label">小时</div></div>
       </div>
     </div>
-    <div class="section-title">🎵 我的歌单</div>
-    <div id="myPlaylists"><div class="loading"><span class="spin">⏳</span> 加载中…</div></div>`;
+    <div class="my-quick">
+      <div class="q-btn"><div class="q-icon">🕐</div><div class="q-label">最近</div></div>
+      <div class="q-btn"><div class="q-icon">📱</div><div class="q-label">本地</div></div>
+      <div class="q-btn"><div class="q-icon">👑</div><div class="q-label" style="color:var(--pink-deep)">VIP会员</div></div>
+      <div class="q-btn"><div class="q-icon">✨</div><div class="q-label">装扮</div></div>
+      <div class="q-btn"><div class="q-icon" style="font-size:16px">•••</div><div class="q-label">更多</div></div>
+    </div>
+    <div class="my-tabs">
+      <div class="my-tab active">音乐</div>
+      <div class="my-tab">播客</div>
+      <div class="my-tab">笔记</div>
+    </div>
+    <div class="my-playlist-area">
+      <div id="myPlaylists"><div style="padding:24px;text-align:center;color:var(--text2)">⏳ 加载歌单…</div></div>
+    </div>`;
+
+  // 异步加载用户详情（等级/关注/粉丝/听歌时长）
+  try {
+    const d2 = await api('/user/detail', { uid: userInfo.userId });
+    if (d2.profile) {
+      document.getElementById('statFollows').textContent = d2.profile.follows ?? 0;
+      document.getElementById('statFolloweds').textContent = d2.profile.followeds ?? 0;
+      document.getElementById('statLevel').textContent = 'Lv.' + (d2.profile.level || 1);
+      const hrs = Math.round((d2.listenSongs || 0) * 3 / 60);
+      document.getElementById('statListen').textContent = hrs + '小时';
+    }
+  } catch(e) {}
+
   // 加载歌单
   try {
-    const d = await api('/user/playlist', { uid: userInfo.userId, limit: 20 });
+    const d = await api('/user/playlist', { uid: userInfo.userId, limit: 30 });
     const lists = d.playlist || [];
-    document.getElementById('myPlaylists').innerHTML = lists.map(pl => `
-      <div class="playlist-card" onclick="loadPlaylist(${pl.id},'${pl.name.replace(/'/g,"\\'")}')">
-        <div class="pl-cover">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=80y80">` : '🎵'}</div>
-        <div class="pl-info"><div class="pl-name">${pl.name}</div><div class="pl-count">${pl.trackCount} 首</div></div>
-      </div>`).join('') || '<div class="empty"><div class="empty-icon">📋</div><div>暂无歌单</div></div>';
-  } catch(e) { document.getElementById('myPlaylists').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div>加载失败</div></div>'; }
+    if (!lists.length) {
+      document.getElementById('myPlaylists').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2)">暂无歌单</div>';
+      return;
+    }
+    const favPl = lists[0];
+    const otherPls = lists.slice(1);
+    // 用全局数组存歌单信息避免onclick里特殊字符问题
+    window._myPlaylists = lists;
+    document.getElementById('myPlaylists').innerHTML = `
+      <div class="my-fav-row" onclick="loadPlaylist(window._myPlaylists[0].id, window._myPlaylists[0].name)">
+        <div class="my-fav-cover">❤️</div>
+        <div class="my-fav-info">
+          <div class="my-fav-name">${favPl.name}</div>
+          <div class="my-fav-count">${favPl.trackCount} 首</div>
+        </div>
+        <div class="my-fav-mode">♡ 心动模式</div>
+      </div>
+      ${otherPls.map((pl, i) => `
+      <div class="my-pl-item" onclick="loadPlaylist(window._myPlaylists[${i+1}].id, window._myPlaylists[${i+1}].name)">
+        <div class="my-pl-cover">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=80y80">` : '🎵'}</div>
+        <div class="my-pl-info">
+          <div class="my-pl-name">${pl.name}</div>
+          <div class="my-pl-desc">歌单 · ${pl.trackCount}首 · ${pl.creator?.nickname || ''}</div>
+        </div>
+      </div>`).join('')}
+      <div class="my-new-btn">
+        <div class="my-new-icon">＋</div>
+        <div style="font-size:14px;color:var(--text2)">新建歌单</div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('myPlaylists').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2)">加载失败</div>';
+  }
 }
 
 async function loadPlaylist(id, name) {
