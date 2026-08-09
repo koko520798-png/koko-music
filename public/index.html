@@ -668,7 +668,7 @@ function togglePlay() {
 }
 function setPlayIcon(playing) {
   document.getElementById('playIcon').innerHTML = playing
-    ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+    ? '<rect x="5" y="4" width="4" height="16" rx="2"/><rect x="15" y="4" width="4" height="16" rx="2"/>'
     : '<path d="M8 5v14l11-7z"/>';
 }
 // 播放历史栈：记录听过的歌（存curIdx），最多保留50条
