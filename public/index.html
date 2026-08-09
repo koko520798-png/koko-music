@@ -209,7 +209,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
 <!-- 全局顶部小胶囊（替代原导航栏，三个页面共用） -->
 <div class="top-nav-capsule">
-      <button class="tnc-btn tnc-back" onclick="history.back()">
+      <button class="tnc-btn tnc-back" onclick="goBack()">
         <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
       </button>
       <!-- 中间：播放页=随机/循环切换图标，其他页=页面名称 -->
@@ -400,6 +400,15 @@ let playMode = 1; // 0=循环 1=随机
 let lyricLines = [];
 let lyricTimers = [];
 let qrTimer = null;
+
+// 返回：在iframe里就通知家里关掉overlay，单独访问就正常history.back()
+function goBack() {
+  if (window.parent !== window) {
+    window.parent.postMessage({action:'closeMusic'}, '*');
+  } else {
+    history.back();
+  }
+}
 
 // ====== Tab切换 ======
 let currentTab = 'play';
