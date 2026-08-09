@@ -499,8 +499,8 @@ async function openLogin() {
   document.getElementById('qrTip').textContent = '生成二维码中…';
   document.getElementById('qrBox').innerHTML = '<div class="spin">⏳</div>';
   try {
-    // 1. 获取key
-    const k = await api('/login/qr/key');
+    // 1. 获取key（带设备信息，让网易云授权管理里显示 koko-music）
+    const k = await api('/login/qr/key', { type: 1 });
     const unikey = k.data?.unikey;
     if (!unikey) { document.getElementById('qrTip').textContent = '获取二维码失败'; return; }
     // 2. 生成二维码
@@ -508,28 +508,36 @@ async function openLogin() {
     const qrImg = q.data?.qrimg;
     document.getElementById('qrBox').innerHTML = qrImg ? `<img src="${qrImg}" style="width:100%;height:100%">` : '<div class="spin">⏳</div>';
     document.getElementById('qrTip').textContent = '用手机网易云音乐扫码登录';
-    // 3. 轮询状态
+    // 3. 轮询状态（1秒一次，更快感知到授权成功）
     if (qrTimer) clearInterval(qrTimer);
     qrTimer = setInterval(async () => {
       try {
         const s = await api('/login/qr/check', { key: unikey });
         if (s.code === 803) {
           clearInterval(qrTimer);
-          // 登录成功，保存cookie
-          cookie = s.cookie || '';
-          localStorage.setItem('nease_cookie', cookie);
-          await fetchUserInfo();
-          closeLogin();
-          showToast('登录成功！');
-          renderMyPage();
+          // 登录成功：从响应体的 _cookie 字段取（代理帮我们放进去的）
+          // 同时兼容直接从 s.cookie 取
+          cookie = s._cookie || s.cookie || '';
+          if (cookie) {
+            localStorage.setItem('nease_cookie', cookie);
+            await fetchUserInfo();
+            closeLogin();
+            showToast('🎉 登录成功！');
+            renderMyPage();
+          } else {
+            // cookie为空时尝试直接拉用户信息
+            await fetchUserInfo();
+            if (userInfo) { closeLogin(); showToast('🎉 登录成功！'); renderMyPage(); }
+            else { document.getElementById('qrTip').textContent = '登录成功但获取信息失败，请重试'; }
+          }
         } else if (s.code === 800) {
-          document.getElementById('qrTip').textContent = '二维码已过期，请刷新';
+          document.getElementById('qrTip').textContent = '二维码已过期，点取消后重新登录';
           clearInterval(qrTimer);
         } else if (s.code === 802) {
-          document.getElementById('qrTip').textContent = '扫码成功，请确认登录…';
+          document.getElementById('qrTip').textContent = '✅ 扫码成功，请在网易云App确认…';
         }
       } catch(e) {}
-    }, 2000);
+    }, 1000);
   } catch(e) { document.getElementById('qrTip').textContent = '获取失败，请稍后重试'; }
 }
 function closeLogin() {

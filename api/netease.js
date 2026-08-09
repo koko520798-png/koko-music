@@ -38,9 +38,12 @@ export default async function handler(req, res) {
     const vpsRes = await fetch(url, opts);
     const data = await vpsRes.json();
 
-    // 透传Set-Cookie
+    // 把 Set-Cookie 同时放进响应体（前端 JS 读不到响应头的 Set-Cookie，走响应体取）
     const setCookie = vpsRes.headers.get('set-cookie');
-    if (setCookie) res.setHeader('Set-Cookie', setCookie);
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
+      data._cookie = setCookie; // 前端从这里取 cookie 字符串
+    }
 
     return res.status(vpsRes.status).json(data);
   } catch (e) {
