@@ -800,7 +800,7 @@ async function ensureKokoPlaylist() {
       const d = await api('/user/playlist', { uid: userInfo.userId, limit: 30 });
       window._myPlaylists = d.playlist || [];
     }
-    const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().includes('koko'));
+    const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().trim() === 'koko');
     if (kokoPl) {
       _kokoPlaylistId = kokoPl.id;
       const d = await api('/playlist/track/all', { id: _kokoPlaylistId, limit: 500 });
@@ -933,7 +933,7 @@ async function switchPlayTab(tab) {
         const d = await api('/user/playlist', { uid: userInfo.userId, limit: 30 });
         window._myPlaylists = d.playlist || [];
       }
-      const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().includes('koko'));
+      const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().trim() === 'koko');
       if (!kokoPl) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">找不到koko歌单</li>'; return; }
       const d = await api('/playlist/track/all', { id: kokoPl.id, limit: 100 });
       songs = (d.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||'' }));
