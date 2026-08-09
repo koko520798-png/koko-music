@@ -525,11 +525,14 @@ async function playCur() {
   updateSongUI(song);
   updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
   try {
+    // iOS PWA：在用户手势同步上下文里先 load 解锁 audio，避免 await 之后被系统拦截
+    try { audio.load(); } catch(_) {}
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
     if (!url) { showToast('此歌曲暂无版权'); nextSong(); return; }
     audio.src = url;
-    audio.play();
+    const playPromise = audio.play();
+    if (playPromise) playPromise.catch(() => {});
     isPlaying = true;
     setPlayIcon(true);
     // 加载歌词
@@ -1105,6 +1108,11 @@ window.addEventListener('DOMContentLoaded', () => {
     loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
   }
+  // iOS PWA：首次用户触摸时提前解锁 audio 元素（拿到手势上下文授权）
+  document.addEventListener('touchstart', function unlockAudio() {
+    try { audio.load(); } catch(_) {}
+    document.removeEventListener('touchstart', unlockAudio);
+  }, { once: true, passive: true });
 });
 </script>
 </body>
