@@ -310,6 +310,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
             <line x1="9" y1="17" x2="20" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
+        <!-- 加入koko歌单 -->
+        <button class="ctrl-btn" id="kokoBtn" onclick="toggleKoko()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </button>
         <!-- 实心爱心（无圆圈） -->
         <button class="ctrl-btn fav-circle" onclick="toggleFav()" id="favBtn">
           <svg id="favIcon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -788,6 +796,51 @@ function togglePlayMode() {
   showToast(labels[playMode]);
 }
 function toggleMode() { togglePlayMode(); } // 兼容旧调用
+// ====== koko歌单 ======
+let _kokoPlaylistId = null;
+let _kokoSongIds = new Set();
+
+async function ensureKokoPlaylist() {
+  if (_kokoPlaylistId) return _kokoPlaylistId;
+  if (!cookie) return null;
+  try {
+    if (!userInfo?.userId) await fetchUserInfo();
+    if (!window._myPlaylists) {
+      const d = await api('/user/playlist', { uid: userInfo.userId, limit: 30 });
+      window._myPlaylists = d.playlist || [];
+    }
+    const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().includes('koko'));
+    if (kokoPl) {
+      _kokoPlaylistId = kokoPl.id;
+      const d = await api('/playlist/track/all', { id: _kokoPlaylistId, limit: 500 });
+      _kokoSongIds = new Set((d.songs||[]).map(s => s.id));
+    }
+  } catch(_) {}
+  return _kokoPlaylistId;
+}
+
+function updateKokoBtn() {
+  const btn = document.getElementById('kokoBtn');
+  if (!btn) return;
+  const song = playlist[curIdx];
+  btn.style.color = (song && _kokoSongIds.has(song.id)) ? 'var(--pink-deep)' : '';
+}
+
+async function toggleKoko() {
+  if (!cookie) { showToast('请先登录'); return; }
+  const song = playlist[curIdx];
+  if (!song) return;
+  try {
+    const id = await ensureKokoPlaylist();
+    if (!id) { showToast('找不到koko歌单'); return; }
+    const inKoko = _kokoSongIds.has(song.id);
+    await api('/playlist/tracks', { op: inKoko ? 'del' : 'add', pid: id, tracks: song.id });
+    if (inKoko) { _kokoSongIds.delete(song.id); showToast('已从koko移除'); }
+    else { _kokoSongIds.add(song.id); showToast('已加入koko'); }
+    updateKokoBtn();
+  } catch(e) { showToast('操作失败'); }
+}
+
 // 爱心状态：根据实际收藏判断
 let isFaved = false;
 let likedSongIds = new Set(); // 心动歌单ID集合
@@ -807,6 +860,7 @@ function updateFavIcon() {
   isFaved = songId ? likedSongIds.has(songId) : false;
   const icon = document.getElementById('favIcon');
   if (icon) icon.querySelector('path').setAttribute('d', isFaved ? FAV_SOLID : FAV_OUTLINE);
+  updateKokoBtn();
 }
 
 async function toggleFav() {
@@ -872,8 +926,15 @@ async function switchPlayTab(tab) {
       songs = (d2.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||'' }));
     } else if (tab === 'recommend') {
       if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看每日推荐</li>'; return; }
-      const d = await api('/recommend/songs');
-      songs = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
+      if (window._prefetchedRecommend) {
+        // 用预加载数据，免loading直接显示
+        songs = window._prefetchedRecommend;
+        window._prefetchedRecommend = null;
+      } else {
+        const d = await api('/recommend/songs');
+        songs = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
+        songs = songs.sort(() => Math.random() - 0.5); // 每次顺序不同
+      }
     } else if (tab === 'koko') {
       if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看</li>'; return; }
       if (!userInfo?.userId) await fetchUserInfo();
@@ -1135,14 +1196,55 @@ window.addEventListener('DOMContentLoaded', () => {
   if (cookie && userInfo) {
     loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
+    // 后台预加载推荐 + 预取第一首URL（同时解决iOS解锁和推荐自动填充）
+    (async () => {
+      try {
+        const d = await api('/recommend/songs');
+        let songs = (d.data?.dailySongs||[]).map(s => ({
+          id:s.id, name:s.name,
+          artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'),
+          cover:s.al?.picUrl||s.album?.picUrl||''
+        }));
+        songs = songs.sort(() => Math.random() - 0.5);
+        window._prefetchedRecommend = songs;
+        // 预取第一首URL，提前set进audio.src（iOS touchstart时直接play，不需要await）
+        if (songs.length && !isPlaying) {
+          const u = await api('/song/url', { id: songs[0].id, br: 128000 });
+          const url = u.data?.[0]?.url;
+          if (url && !isPlaying) { audio.src = url; window._prefetchedSong = songs[0]; }
+        }
+      } catch(_) {}
+    })();
+    // 后台预热koko歌单（切歌时updateKokoBtn能立刻响应）
+    ensureKokoPlaylist().catch(() => {});
   }
-  // iOS PWA：首次用户触摸时用合法静音src解锁audio（空src的play()不算解锁）
+  // iOS PWA：首次触摸时解锁audio
+  // 如果有预加载的歌曲URL（audio.src已设好），直接play；否则用静音WAV兜底
   document.addEventListener('touchstart', function unlockAudio() {
-    audio.src = getSilentUrl();
-    audio.muted = true;
-    audio.play()
-      .then(() => { audio.pause(); audio.muted = false; })
-      .catch(() => { audio.muted = false; });
+    if (window._prefetchedSong && audio.src && !isPlaying) {
+      const song = window._prefetchedSong;
+      window._prefetchedSong = null;
+      if (!playlist.length) {
+        playlist = window._prefetchedRecommend ? [...window._prefetchedRecommend] : [song];
+        curIdx = 0;
+        savePlaylist();
+        window._prefetchedRecommend = null;
+      }
+      updateSongUI(song);
+      updateFavIcon();
+      audio.muted = false;
+      audio.play().catch(() => {});
+      isPlaying = true;
+      setPlayIcon(true);
+      loadLyric(song.id);
+      localStorage.setItem('nease_curIdx', 0);
+    } else {
+      audio.src = getSilentUrl();
+      audio.muted = true;
+      audio.play()
+        .then(() => { audio.pause(); audio.muted = false; })
+        .catch(() => { audio.muted = false; });
+    }
   }, { once: true, passive: true });
 });
 </script>
