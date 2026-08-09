@@ -265,6 +265,19 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 const API = '/api/netease?key=xiaomao520';
 const audio = document.getElementById('audio');
 
+// ====== Cookie工具 ======
+// 把 Set-Cookie 格式（含 Max-Age/Path 等）解析成纯 Cookie 请求头格式
+function parseCookieForHeader(setCookieStr) {
+  if (!setCookieStr) return '';
+  // 多个cookie之间用", "分隔（逗号后跟cookie名称）
+  // 每个cookie第一个;之前是 name=value
+  return setCookieStr
+    .split(/,(?=\s*[a-zA-Z_\-]+=)/)
+    .map(c => c.trim().split(';')[0].trim())
+    .filter(Boolean)
+    .join('; ');
+}
+
 // ====== 状态 ======
 let playlist = JSON.parse(localStorage.getItem('nease_playlist') || '[]');
 let curIdx = parseInt(localStorage.getItem('nease_curIdx') || '0');
@@ -515,9 +528,9 @@ async function openLogin() {
         const s = await api('/login/qr/check', { key: unikey });
         if (s.code === 803) {
           clearInterval(qrTimer);
-          // 登录成功：从响应体的 _cookie 字段取（代理帮我们放进去的）
-          // 同时兼容直接从 s.cookie 取
-          cookie = s._cookie || s.cookie || '';
+          // 登录成功：从响应体取 cookie，解析成纯 name=value 格式（去掉 Max-Age/Path 等）
+          const rawCookie = s._cookie || s.cookie || '';
+          cookie = parseCookieForHeader(rawCookie);
           if (cookie) {
             localStorage.setItem('nease_cookie', cookie);
             await fetchUserInfo();
