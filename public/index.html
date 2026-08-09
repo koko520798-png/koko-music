@@ -550,18 +550,32 @@ async function openLogin() {
     const qrImg = q.data?.qrimg;
     document.getElementById('qrBox').innerHTML = qrImg ? `<img src="${qrImg}" style="width:100%;height:100%">` : '<div class="spin">⏳</div>';
     document.getElementById('qrTip').textContent = '用手机网易云音乐扫码登录';
-    // 3. 轮询状态（1秒一次，更快感知到授权成功）
+    // 3. 轮询状态（1秒一次）
+    // qrSession：每次check拿到的NMTID，下次check带上去，让网易云认出我们的会话
+    let qrSession = '';
     if (qrTimer) clearInterval(qrTimer);
     qrTimer = setInterval(async () => {
       try {
-        const s = await api('/login/qr/check', { key: unikey });
+        // 带session cookie发请求
+        const checkUrl = `${API}&path=${encodeURIComponent('/login/qr/check')}&key=${encodeURIComponent(unikey)}`;
+        const fetchOpts = {};
+        if (qrSession) fetchOpts.headers = { 'Cookie': qrSession };
+        const res = await fetch(checkUrl, fetchOpts);
+        const s = await res.json();
         // 调试：显示当前状态
-        document.getElementById('qrTip').textContent = `状态 ${s.code} | cookie:${(s.cookie||'').slice(0,20)} | _ck:${(s._cookie||'').slice(0,20)}`;
+        document.getElementById('qrTip').textContent = `状态 ${s.code} | sess:${qrSession.slice(0,15)||'空'} | ck:${(s.cookie||'').slice(0,15)} | _ck:${(s._cookie||'').slice(0,15)}`;
+        if (s.code === 801) {
+          // 保存NMTID session，下次check带着
+          const rawSess = s._cookie || s.cookie || '';
+          if (rawSess) qrSession = parseCookieForHeader(rawSess);
+        } else if (s.code === 802) {
+          document.getElementById('qrTip').textContent = '✅ 扫码成功，请在网易云App确认…';
+        }
         if (s.code === 803) {
           clearInterval(qrTimer);
           // 登录成功：从响应体取 cookie，解析成纯 name=value 格式（去掉 Max-Age/Path 等）
           const rawCookie = s._cookie || s.cookie || '';
-          cookie = parseCookieForHeader(rawCookie);
+          cookie = parseCookieForHeader(rawCookie) || qrSession;
           document.getElementById('qrTip').textContent = `803✓ raw:${rawCookie.slice(0,30)} → parsed:${cookie.slice(0,30)}`;
           if (cookie) {
             localStorage.setItem('nease_cookie', cookie);
