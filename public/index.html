@@ -328,12 +328,14 @@ function switchTab(tab) {
 }
 
 // ====== API请求 ======
+// NeteaseCloudMusicApi读的是 query.cookie（URL参数），不是HTTP Cookie头
+// 所以登录后的所有请求都把cookie放进URL参数里传
 async function api(path, params = {}) {
-  const qs = new URLSearchParams(params).toString();
+  const allParams = { ...params };
+  if (cookie) allParams.cookie = cookie; // 关键：cookie作为URL参数
+  const qs = new URLSearchParams(allParams).toString();
   const url = `${API}&path=${encodeURIComponent(path)}${qs ? '&' + qs : ''}`;
-  const headers = {};
-  if (cookie) headers['Cookie'] = cookie;
-  const res = await fetch(url, { headers });
+  const res = await fetch(url);
   return res.json();
 }
 
