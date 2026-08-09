@@ -28,9 +28,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 /* ====== 底部tab ====== */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--border);
   padding:0 0 env(safe-area-inset-bottom,0);display:flex}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:11px;color:var(--text2);gap:3px;transition:color .2s}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:15px;font-weight:500;color:var(--text2);gap:3px;transition:color .2s}
 .tab.active{color:var(--active)}
-.tab-icon{font-size:22px}
 /* ====== 主内容 ====== */
 .main{padding-top:calc(env(safe-area-inset-top,0) + 54px);padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
 .page{display:none;min-height:100%}
@@ -39,7 +38,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .tnc-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:3px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
 .tnc-btn svg{width:17px;height:17px;fill:currentColor}
 .tnc-mid{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
-.tnc-mid svg{width:18px;height:18px;fill:currentColor}
+.tnc-mid svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* 设置按钮专属：描边gear */
+.tnc-settings svg{fill:none !important;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 5卡叠叠拍立得轮播（绝对定位叠加） */
 .cover-carousel{position:relative;height:230px;padding:10px 0 0;overflow:visible;touch-action:pan-y;user-select:none}
 .covers-track{position:relative;width:100%;height:100%}
@@ -49,7 +50,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-inner img{width:100%;height:100%;object-fit:cover;display:block}
 .cover-placeholder{width:100%;height:100%;background:rgba(242,168,192,.35);display:flex;align-items:center;justify-content:center;font-size:28px}
 /* 歌名在中间卡片底部白区 */
-.cover-title{width:100%;padding:5px 8px 0;text-align:center;display:none}
+.cover-title{width:100%;padding:5px 8px 0;text-align:center;display:none;margin-top:2px}
 .cover-item.center .cover-title{display:block}
 .song-name{font-size:12px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .song-artist{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
@@ -66,9 +67,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-item.center .cover-wrap{width:150px;height:auto;padding:7px 7px 14px;border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
 .cover-item.center .cover-inner{width:136px;height:136px;border-radius:16px}
 /* 歌词3行（小字） */
-.lyrics{text-align:center;padding:6px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:52px;overflow:hidden}
-.lyric-line{font-size:11px;color:var(--text2);line-height:1.65;opacity:.4;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.lyric-line.active{opacity:1;color:var(--pink-deep);font-weight:600;font-size:12px}
+.lyrics{text-align:center;padding:4px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;overflow:hidden}
+.lyric-line{font-size:11px;color:var(--text2);line-height:1.4;opacity:.4;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lyric-line.active{opacity:1;color:var(--pink-deep);font-weight:600;font-size:12px;line-height:1.4}
 /* 控制胶囊（参考图二：更薄，无时间，爱心圈） */
 .controls-capsule{margin:6px 28px 0;padding:7px 12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.75);-webkit-backdrop-filter:blur(28px) saturate(180%) brightness(1.08);backdrop-filter:blur(28px) saturate(180%) brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.70),0 2px 14px rgba(0,0,0,.09);border:.5px solid rgba(255,255,255,.50);border-radius:999px}
 .ctrl-left{display:flex;align-items:center;gap:1px;flex-shrink:0}
@@ -176,10 +177,21 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .modal-qr img{width:100%;height:100%}
 .modal-qr-tip{text-align:center;font-size:12px;color:var(--text2);margin-bottom:20px}
 .modal-close{width:100%;background:none;border:1px solid var(--border);border-radius:24px;padding:12px;font-size:15px;color:var(--text2);cursor:pointer}
-/* ====== 加载 ====== */
+/* ====== 加载（画爱心动画） ====== */
 .loading{text-align:center;padding:32px;color:var(--text2);font-size:14px}
-.spin{display:inline-block;animation:spin 1s linear infinite;font-size:20px}
-@keyframes spin{to{transform:rotate(360deg)}}
+.heart-loader{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;vertical-align:middle}
+.heart-loader svg{width:100%;height:100%}
+.heart-loader .hp{
+  fill:none;stroke:var(--pink-deep);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:85;stroke-dashoffset:85;
+  animation:drawHeart 1.6s ease-in-out infinite
+}
+@keyframes drawHeart{
+  0%{stroke-dashoffset:85;opacity:.5}
+  60%{stroke-dashoffset:0;opacity:1}
+  80%{stroke-dashoffset:0;opacity:1}
+  100%{stroke-dashoffset:85;opacity:.5}
+}
 /* ====== 空状态 ====== */
 .empty{text-align:center;padding:48px 24px;color:var(--text2)}
 .empty-icon{font-size:48px;margin-bottom:12px}
@@ -194,13 +206,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
       </button>
       <!-- 中间：播放页=随机/循环切换图标，其他页=页面名称 -->
       <div class="tnc-mid" id="tncMid" onclick="tncMidClick()">
-        <svg id="tncModeIcon" viewBox="0 0 24 24"><path id="tncModePath" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v5z"/></svg>
+        <svg id="tncModeIcon" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
       </div>
-      <!-- 右：空心设置图标 -->
-      <button class="tnc-btn" onclick="showToast('设置敬请期待')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 右：空心设置图标（和自建家一样的stroke gear） -->
+      <button class="tnc-btn tnc-settings" onclick="showToast('设置敬请期待')">
+        <svg viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
         </svg>
       </button>
 </div>
@@ -264,13 +276,22 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         </div>
       </div>
       <div class="ctrl-right">
-        <!-- 引号气泡（歌词/评论） -->
+        <!-- 对话气泡（评论） -->
         <button class="ctrl-btn" onclick="showToast('评论功能即将上线')">
-          <svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
+          <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
         </button>
-        <!-- 歌单列表 -->
+        <!-- bullet list（带小圆点的歌单） -->
         <button class="ctrl-btn" onclick="cyclePlayTab()">
-          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <circle cx="4.5" cy="7" r="1.5"/>
+            <line x1="9" y1="7" x2="20" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="4.5" cy="12" r="1.5"/>
+            <line x1="9" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="4.5" cy="17" r="1.5"/>
+            <line x1="9" y1="17" x2="20" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
         <!-- 实心爱心（无圆圈） -->
         <button class="ctrl-btn fav-circle" onclick="toggleFav()" id="favBtn">
@@ -313,18 +334,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
 <!-- 底部tab -->
 <div class="tab-bar">
-  <div class="tab active" onclick="switchTab('play')" id="tab-play">
-    <div class="tab-icon">🎵</div>
-    <div>播放</div>
-  </div>
-  <div class="tab" onclick="switchTab('search')" id="tab-search">
-    <div class="tab-icon">🔍</div>
-    <div>搜索</div>
-  </div>
-  <div class="tab" onclick="switchTab('my')" id="tab-my">
-    <div class="tab-icon">👤</div>
-    <div>我的</div>
-  </div>
+  <div class="tab active" onclick="switchTab('play')" id="tab-play">播放</div>
+  <div class="tab" onclick="switchTab('search')" id="tab-search">搜索</div>
+  <div class="tab" onclick="switchTab('my')" id="tab-my">我的</div>
 </div>
 
 <!-- 登录弹窗 -->
@@ -332,7 +344,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
   <div class="modal">
     <div class="modal-title">扫码登录网易云</div>
     <div class="modal-sub">用手机网易云音乐扫码</div>
-    <div class="modal-qr" id="qrBox"><div class="spin">⏳</div></div>
+    <div class="modal-qr" id="qrBox"><div class="heart-loader"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></div>
     <div class="modal-qr-tip" id="qrTip">生成中…</div>
     <button class="modal-close" onclick="closeLogin()">取消</button>
   </div>
@@ -388,7 +400,7 @@ function updateCapsuleMid(tab) {
   const mid = document.getElementById('tncMid');
   if (!mid) return;
   if (tab === 'play') {
-    mid.innerHTML = `<svg id="tncModeIcon" viewBox="0 0 24 24"><path id="tncModePath" d="${playMode===0?LOOP_PATH:SHUFFLE_PATH}"/></svg>`;
+    mid.innerHTML = `<svg id="tncModeIcon" viewBox="0 0 24 24">${getModeInner()}</svg>`;
   } else {
     const labels = {search:'搜索', my:'我的'};
     mid.innerHTML = `<span style="font-size:13px;font-weight:600;color:var(--text)">${labels[tab]||''}</span>`;
@@ -418,7 +430,7 @@ async function doSearch() {
   const kw = document.getElementById('searchInput').value.trim();
   if (!kw) return;
   const el = document.getElementById('resultList');
-  el.innerHTML = '<div class="loading"><span class="spin">⏳</span> 搜索中…</div>';
+  el.innerHTML = '<div class="loading"><div class="heart-loader" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div> 搜索中…</div>';
   try {
     const d = await api('/cloudsearch', { keywords: kw, limit: 20 });
     const songs = d.result?.songs || [];
@@ -567,33 +579,50 @@ function prevSong() {
   playCur();
 }
 function nextSong() {
+  if (playMode === 2) { // 单曲循环：重播当前
+    if (audio) { audio.currentTime = 0; audio.play(); }
+    return;
+  }
   if (playMode === 1) curIdx = Math.floor(Math.random() * playlist.length);
   else curIdx = (curIdx + 1) % playlist.length;
   playCur();
 }
-// 播放模式：0=循环播放(🔁) 1=随机播放(🔀)
-const LOOP_PATH = 'M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v5z';
-const SHUFFLE_PATH = 'M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z';
+// 播放模式：0=列表循环 1=随机播放 2=单曲循环
+// 细线Feather Icons风格SVG inner HTML
+const LOOP_SVG = `<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>`;
+const SHUFFLE_SVG = `<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>`;
+const REPEAT1_SVG = `<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/><text x="12" y="15.5" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" stroke="none">1</text>`;
+function getModeInner() {
+  if (playMode === 0) return LOOP_SVG;
+  if (playMode === 1) return SHUFFLE_SVG;
+  return REPEAT1_SVG;
+}
 function updateModeIcon() {
-  const p = document.getElementById('tncModePath');
-  if (p) p.setAttribute('d', playMode === 0 ? LOOP_PATH : SHUFFLE_PATH);
-  else updateCapsuleMid(currentTab); // 元素不存在时重新渲染
+  const icon = document.getElementById('tncModeIcon');
+  if (icon) icon.innerHTML = getModeInner();
+  else updateCapsuleMid(currentTab);
 }
 function togglePlayMode() {
-  playMode = playMode === 0 ? 1 : 0;
+  playMode = (playMode + 1) % 3;
   updateModeIcon();
-  showToast(playMode === 0 ? '循环播放' : '随机播放');
+  const labels = ['列表循环', '随机播放', '单曲循环'];
+  showToast(labels[playMode]);
 }
 function toggleMode() { togglePlayMode(); } // 兼容旧调用
 // 爱心默认实心（已收藏态），点击切换到空心（未收藏），再点切回实心
 let isFaved = false;
 const FAV_SOLID = 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
 const FAV_OUTLINE = 'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z';
-function toggleFav() {
+async function toggleFav() {
   isFaved = !isFaved;
   const icon = document.getElementById('favIcon');
   icon.querySelector('path').setAttribute('d', isFaved ? FAV_SOLID : FAV_OUTLINE);
-  showToast(isFaved ? '已收藏' : '取消收藏');
+  showToast(isFaved ? '❤ 加入心动歌单' : '取消收藏');
+  // 调用网易云/like API
+  const songId = playlist[curIdx]?.id;
+  if (songId && cookie) {
+    try { await api('/like', { id: songId, like: isFaved }); } catch(e) {}
+  }
 }
 
 // 封面滑动切歌
@@ -631,7 +660,7 @@ async function switchPlayTab(tab) {
   document.getElementById('ptab-' + tab).classList.add('active');
   updateTncTitle();
   const el = document.getElementById('playTabList');
-  el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none"><span class="spin">⏳</span></li>';
+  el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none"><div class="heart-loader" style="width:24px;height:24px;margin:0 auto"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></li>';
   try {
     let songs = [];
     if (tab === 'heart') {
@@ -691,7 +720,7 @@ function playTabSong(idx) {
 async function openLogin() {
   document.getElementById('loginModal').classList.remove('hidden');
   document.getElementById('qrTip').textContent = '生成二维码中…';
-  document.getElementById('qrBox').innerHTML = '<div class="spin">⏳</div>';
+  document.getElementById('qrBox').innerHTML = '<div class="heart-loader"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>';
   try {
     // 1. 获取key（带设备信息，让网易云授权管理里显示 koko-music）
     const k = await api('/login/qr/key', { type: 1 });
