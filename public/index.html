@@ -38,7 +38,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .tnc-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:3px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
 .tnc-btn svg{width:17px;height:17px;fill:currentColor}
 /* 左边返回按钮大一点 */
-.tnc-back svg{width:20px;height:20px}
+.tnc-back svg{width:22px;height:22px}
 .tnc-mid{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
 .tnc-mid svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 /* 设置按钮专属：描边gear */
@@ -87,9 +87,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .ctrl-right{display:flex;align-items:center;gap:2px;flex-shrink:0}
 .ctrl-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);padding:3px;transition:color .2s;-webkit-tap-highlight-color:transparent}
 .ctrl-btn:active{opacity:.7}
-.ctrl-btn.play-btn{width:28px;height:28px;background:var(--pink-deep);border-radius:50%;color:#fff;padding:0;box-shadow:0 2px 8px rgba(224,112,144,.35)}
+.ctrl-btn.play-btn{width:42px;height:42px;background:var(--pink-deep);border-radius:50%;color:#fff;padding:0;box-shadow:0 3px 14px rgba(224,112,144,.45)}
 .ctrl-btn svg{width:17px;height:17px;fill:currentColor}
-.ctrl-btn.play-btn svg{width:12px;height:12px;fill:#fff;margin-left:1px}
+.ctrl-btn.skip-btn svg{width:22px;height:22px;fill:currentColor}
+.ctrl-btn.play-btn svg{width:20px;height:20px;fill:#fff;margin-left:2px}
 .ctrl-btn.fav-circle{width:24px;height:24px;padding:2px;color:var(--pink-deep)}
 .ctrl-btn.fav-circle svg{width:18px;height:18px}
 .progress-bar{width:100%;height:3px;background:rgba(224,112,144,.18);border-radius:2px;position:relative;cursor:pointer}
@@ -265,16 +266,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
     <!-- 控制胶囊 -->
     <div class="controls-capsule">
       <div class="ctrl-left">
-        <!-- 上一首：网易云skip_previous样式（竖线+三角） -->
-        <button class="ctrl-btn" onclick="prevSong()">
+        <!-- 上一首：返回上一首听过的歌（历史记录） -->
+        <button class="ctrl-btn skip-btn" onclick="prevSong()">
           <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
         </button>
         <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">
           <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         </button>
-        <!-- 下一首：网易云skip_next样式（三角+竖线） -->
-        <button class="ctrl-btn" onclick="nextSong()">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 8.5 6V6l-8.5 6zM16.5 6h2v12h-2z"/></svg>
+        <!-- 下一首：skip_next样式（三角+竖线） -->
+        <button class="ctrl-btn skip-btn" onclick="nextSong()">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
         </button>
       </div>
       <div class="ctrl-mid">
@@ -286,9 +287,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
       <div class="ctrl-right">
         <!-- 对话气泡+引号（评论） -->
         <button class="ctrl-btn" onclick="showToast('评论功能即将上线')">
-          <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round">
+          <svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            <text x="12" y="13.5" text-anchor="middle" font-size="6" font-weight="900" fill="currentColor" stroke="none">"</text>
+            <text x="12" y="14" text-anchor="middle" font-size="9" font-weight="900" fill="currentColor" stroke="none">"</text>
           </svg>
         </button>
         <!-- bullet list（带小圆点的歌单） -->
@@ -465,6 +466,7 @@ async function doSearch() {
 // ====== 播放 ======
 async function addAndPlay(song) {
   addToPlaylist(song, false);
+  pushCurToHistory();
   curIdx = playlist.findIndex(s => s.id === song.id);
   await playCur();
   switchTab('play');
@@ -669,11 +671,24 @@ function setPlayIcon(playing) {
     ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
     : '<path d="M8 5v14l11-7z"/>';
 }
+// 播放历史栈：记录听过的歌（存curIdx），最多保留50条
+let playHistory = [];
+function pushCurToHistory() {
+  if (playlist.length > 0 && curIdx >= 0 && curIdx < playlist.length) {
+    playHistory.push(curIdx);
+    if (playHistory.length > 50) playHistory.shift();
+  }
+}
 function prevSong() {
-  curIdx = (curIdx - 1 + playlist.length) % playlist.length;
+  if (playHistory.length > 0) {
+    curIdx = playHistory.pop(); // 回到上一首听过的歌
+  } else {
+    curIdx = (curIdx - 1 + playlist.length) % playlist.length;
+  }
   playCur();
 }
 function nextSong() {
+  pushCurToHistory(); // 切走前先存当前
   if (playMode === 2) { // 单曲循环：重播当前
     if (audio) { audio.currentTime = 0; audio.play(); }
     return;
@@ -753,7 +768,7 @@ document.getElementById('carousel').addEventListener('touchend', e => {
 function renderPlaylist() {
   if (window._tabSongs) renderTabSongs(document.getElementById('playTabList'));
 }
-function playSongAt(idx) { curIdx = idx; playCur(); }
+function playSongAt(idx) { pushCurToHistory(); curIdx = idx; playCur(); }
 function removeSong(idx) { playlist.splice(idx,1); if(curIdx>=playlist.length) curIdx=Math.max(0,playlist.length-1); savePlaylist(); }
 function clearPlaylist() { playlist=[]; curIdx=0; audio.pause(); audio.src=''; isPlaying=false; setPlayIcon(false); savePlaylist(); document.getElementById('songName').textContent='未在播放'; document.getElementById('songArtist').textContent='-'; document.querySelector('#coverCur .cover-inner').innerHTML='<div class="cover-placeholder">🎶</div>'; }
 const _tabOrder = ['heart','recommend','koko'];
