@@ -402,18 +402,26 @@ let lyricTimers = [];
 let qrTimer = null;
 
 // 接收家里传来的登录状态（解决iOS iframe localStorage隔离问题）
-// 只静默设置变量，不调用renderMyPage（避免fetchUserInfo失败时清掉cookie）
 window.addEventListener('message', function(e) {
-  if (!e.data || e.data.action !== 'setAuth') return;
-  if (e.data.cookie) {
-    cookie = e.data.cookie;
-    localStorage.setItem('nease_cookie', cookie);
+  if (!e.data) return;
+  if (e.data.action === 'setAuth') {
+    if (e.data.cookie) {
+      cookie = e.data.cookie;
+      localStorage.setItem('nease_cookie', cookie);
+    }
+    if (e.data.user && e.data.user !== 'null') {
+      try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
+    }
   }
-  if (e.data.user && e.data.user !== 'null') {
-    try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
-  }
-  if (cookie && !userInfo) loadLikedSongs(); // userInfo已有时不重复拉，只加载爱心歌单
 });
+
+// 启动时：通知家里"我准备好了"，请求家里发cookie过来；同时把自己已有的cookie也发给家里存
+if (window.parent !== window) {
+  window.parent.postMessage({action:'kokoReady'}, '*');
+  if (cookie) {
+    window.parent.postMessage({action:'saveAuth', cookie:cookie, user:JSON.stringify(userInfo)}, '*');
+  }
+}
 
 // 返回：在iframe里就通知家里关掉overlay，单独访问就正常history.back()
 function goBack() {
