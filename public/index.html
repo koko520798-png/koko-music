@@ -32,46 +32,50 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .page{display:none;min-height:100%}
 .page.active{display:block}
 /* ====== 播放页 ====== */
-/* 5卡拍立得轮播 */
-.cover-carousel{position:relative;padding:18px 0 4px;height:248px;overflow:visible;touch-action:pan-y;user-select:none}
-.covers-track{display:flex;align-items:center;justify-content:center;height:100%;gap:4px}
-.cover-item{flex-shrink:0;transition:all .4s cubic-bezier(.25,.46,.45,.94);cursor:pointer}
-.cover-wrap{border-radius:6px;overflow:hidden;display:flex;flex-direction:column;align-items:center;background:rgba(252,232,237,.85);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.cover-inner{overflow:hidden;border-radius:3px;flex-shrink:0}
+/* 5卡叠叠拍立得轮播（绝对定位叠加） */
+.cover-carousel{position:relative;height:220px;padding:14px 0 0;overflow:visible;touch-action:pan-y;user-select:none}
+.covers-track{position:relative;width:100%;height:100%}
+.cover-item{position:absolute;top:50%;left:50%;transform-origin:center center;transition:all .4s cubic-bezier(.25,.46,.45,.94);cursor:pointer}
+.cover-wrap{display:flex;flex-direction:column;align-items:center;overflow:hidden;background:rgba(252,232,237,.90);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.cover-inner{overflow:hidden;flex-shrink:0}
 .cover-inner img{width:100%;height:100%;object-fit:cover;display:block}
-.cover-placeholder{width:100%;height:100%;background:rgba(242,168,192,.35);display:flex;align-items:center;justify-content:center;font-size:28px}
-.cover-item.far-prev,.cover-item.far-next{opacity:.3;transform:scale(.66)}
-.cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:74px;height:94px;padding:5px 5px 16px;box-shadow:0 4px 14px rgba(0,0,0,.14)}
-.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:64px;height:64px}
-.cover-item.prev,.cover-item.next{opacity:.6;transform:scale(.81)}
-.cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:98px;height:124px;padding:6px 6px 22px;box-shadow:0 6px 18px rgba(0,0,0,.16)}
-.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:86px;height:86px}
-.cover-item.center .cover-wrap{width:142px;height:180px;padding:8px 8px 30px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
-.cover-item.center .cover-inner{width:126px;height:126px}
-/* 歌名胶囊 */
-.song-info-capsule{margin:8px 28px 0;padding:8px 20px;text-align:center;background:radial-gradient(ellipse 90% 55% at 50% 0%,rgba(255,255,255,.22) 0%,transparent 65%),rgba(255,255,255,.12);-webkit-backdrop-filter:blur(28px) saturate(180%) brightness(1.12);backdrop-filter:blur(28px) saturate(180%) brightness(1.12);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.60),inset 0 -1px 0 rgba(255,255,255,.10),0 2px 18px rgba(0,0,0,.10);border:.5px solid rgba(255,255,255,.32);border-radius:999px}
-.song-name{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.song-artist{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover-placeholder{width:100%;height:100%;background:rgba(242,168,192,.35);display:flex;align-items:center;justify-content:center;font-size:20px}
+/* 歌名在中间卡片底部白区 */
+.cover-title{width:100%;padding:4px 6px 0;text-align:center;display:none}
+.cover-item.center .cover-title{display:block}
+.song-name{font-size:11px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-artist{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+/* 各档位（全用同尺寸cover-wrap，靠scale+translateX区分层次） */
+.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-108px) scale(.56);opacity:.4;z-index:1}
+.cover-item.far-next{transform:translate(-50%,-50%) translateX(108px) scale(.56);opacity:.4;z-index:1}
+.cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:96px;height:128px;padding:5px 5px 30px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.13)}
+.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:86px;height:86px;border-radius:16px}
+.cover-item.prev{transform:translate(-50%,-50%) translateX(-64px) scale(.74);opacity:.72;z-index:2}
+.cover-item.next{transform:translate(-50%,-50%) translateX(64px) scale(.74);opacity:.72;z-index:2}
+.cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:96px;height:128px;padding:5px 5px 30px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:86px;height:86px;border-radius:16px}
+.cover-item.center{transform:translate(-50%,-50%) translateX(0) scale(1);opacity:1;z-index:5}
+.cover-item.center .cover-wrap{width:96px;height:145px;padding:5px 5px 44px;border-radius:20px;box-shadow:0 10px 28px rgba(0,0,0,.20)}
+.cover-item.center .cover-inner{width:86px;height:86px;border-radius:16px}
 /* 歌词3行 */
-.lyrics{text-align:center;padding:6px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:60px;overflow:hidden}
+.lyrics{text-align:center;padding:6px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:58px;overflow:hidden}
 .lyric-line{font-size:13px;color:var(--text2);line-height:1.7;opacity:.45;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .lyric-line.active{opacity:1;color:var(--pink-deep);font-weight:600;font-size:14px}
-/* 控制胶囊 */
-.controls-capsule{margin:6px 16px 0;padding:10px 16px 12px;background:radial-gradient(ellipse 90% 55% at 50% 0%,rgba(255,255,255,.22) 0%,transparent 65%),rgba(255,255,255,.12);-webkit-backdrop-filter:blur(28px) saturate(180%) brightness(1.12);backdrop-filter:blur(28px) saturate(180%) brightness(1.12);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.60),inset 0 -1px 0 rgba(255,255,255,.10),0 2px 18px rgba(0,0,0,.10);border:.5px solid rgba(255,255,255,.32);border-radius:24px}
-.progress-wrap{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.progress-time{font-size:11px;color:var(--text2);width:35px}
-.progress-time.right{text-align:right}
-.progress-bar{flex:1;height:3px;background:rgba(224,112,144,.2);border-radius:2px;position:relative;cursor:pointer}
-.progress-fill{height:100%;background:var(--pink-deep);border-radius:2px;transition:width .5s linear}
-.progress-dot{position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;background:var(--pink-deep);border-radius:50%;box-shadow:0 0 5px rgba(224,112,144,.5)}
-.ctrl-btns{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
-.ctrl-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:color .2s;padding:6px}
+/* 控制胶囊（扁平横向） */
+.controls-capsule{margin:6px 16px 0;padding:9px 12px;display:flex;align-items:center;gap:8px;background:radial-gradient(ellipse 90% 55% at 50% 0%,rgba(255,255,255,.22) 0%,transparent 65%),rgba(255,255,255,.12);-webkit-backdrop-filter:blur(28px) saturate(180%) brightness(1.12);backdrop-filter:blur(28px) saturate(180%) brightness(1.12);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.60),inset 0 -1px 0 rgba(255,255,255,.10),0 2px 18px rgba(0,0,0,.10);border:.5px solid rgba(255,255,255,.32);border-radius:999px}
+.ctrl-left{display:flex;align-items:center;gap:0;flex-shrink:0}
+.ctrl-mid{flex:1;display:flex;align-items:center;gap:5px;min-width:0}
+.ctrl-right{display:flex;align-items:center;gap:0;flex-shrink:0}
+.ctrl-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);padding:4px;transition:color .2s;-webkit-tap-highlight-color:transparent}
 .ctrl-btn:active{opacity:.7}
-.ctrl-btn.main-btn{width:48px;height:48px;background:var(--pink-deep);border-radius:50%;color:#fff;box-shadow:var(--shadow)}
-.ctrl-btn.main-btn:active{transform:scale(.95)}
-.ctrl-btn svg{width:22px;height:22px;fill:currentColor}
-.ctrl-btn.main-btn svg{width:24px;height:24px;fill:#fff}
+.ctrl-btn.play-btn{width:30px;height:30px;background:var(--pink-deep);border-radius:50%;color:#fff;padding:0;box-shadow:0 2px 8px rgba(224,112,144,.35)}
+.ctrl-btn svg{width:18px;height:18px;fill:currentColor}
+.ctrl-btn.play-btn svg{width:14px;height:14px;fill:#fff;margin-left:1px}
 .fav-btn{color:var(--pink-deep)!important}
+.progress-bar{flex:1;height:3px;background:rgba(224,112,144,.2);border-radius:2px;position:relative;cursor:pointer;min-width:0}
+.progress-fill{height:100%;background:var(--pink-deep);border-radius:2px;transition:width .5s linear}
+.progress-dot{position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:8px;height:8px;background:var(--pink-deep);border-radius:50%}
+.progress-time{font-size:10px;color:var(--text2);white-space:nowrap;flex-shrink:0}
 /* 播放tab：心动/推荐/歌单 */
 .play-tab-bar{display:flex;margin:10px 16px 0;background:rgba(255,255,255,.2);border-radius:999px;padding:3px;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:.5px solid rgba(255,255,255,.3)}
 .play-tab{flex:1;text-align:center;padding:7px 0;font-size:13px;color:var(--text2);border-radius:999px;cursor:pointer;transition:.2s;font-weight:500}
@@ -189,7 +193,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
   <!-- 播放页 -->
   <div class="page active" id="page-play">
-    <!-- 封面轮播 - 5卡拍立得 -->
+    <!-- 封面轮播 - 5卡叠叠拍立得 -->
     <div class="cover-carousel" id="carousel">
       <div class="covers-track" id="coversTrack">
         <div class="cover-item far-prev" id="coverFarPrev">
@@ -199,7 +203,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
           <div class="cover-wrap"><div class="cover-inner"><div class="cover-placeholder">🎵</div></div></div>
         </div>
         <div class="cover-item center" id="coverCur">
-          <div class="cover-wrap"><div class="cover-inner"><div class="cover-placeholder">🎶</div></div></div>
+          <div class="cover-wrap">
+            <div class="cover-inner"><div class="cover-placeholder">🎶</div></div>
+            <div class="cover-title">
+              <div class="song-name" id="songName">未在播放</div>
+              <div class="song-artist" id="songArtist">-</div>
+            </div>
+          </div>
         </div>
         <div class="cover-item next" id="coverNext">
           <div class="cover-wrap"><div class="cover-inner"><div class="cover-placeholder">🎵</div></div></div>
@@ -209,39 +219,39 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         </div>
       </div>
     </div>
-    <!-- 歌名+歌手 液态玻璃胶囊 -->
-    <div class="song-info-capsule">
-      <div class="song-name" id="songName">未在播放</div>
-      <div class="song-artist" id="songArtist">-</div>
-    </div>
     <!-- 歌词 3行 -->
     <div class="lyrics" id="lyrics">
       <div class="lyric-line" id="lyric-prev">　</div>
       <div class="lyric-line active" id="lyric-cur">打开歌单，开始听歌</div>
       <div class="lyric-line" id="lyric-next">　</div>
     </div>
-    <!-- 控制 液态玻璃胶囊 -->
+    <!-- 控制胶囊（扁平：左切歌，中进度，右功能键） -->
     <div class="controls-capsule">
-      <div class="progress-wrap">
+      <div class="ctrl-left">
+        <button class="ctrl-btn" onclick="prevSong()">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="nextSong()">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 4.96 3.14L8 16.14V9.86zM16 6h2v12h-2z"/></svg>
+        </button>
+      </div>
+      <div class="ctrl-mid">
         <span class="progress-time" id="curTime">0:00</span>
         <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
           <div class="progress-fill" id="progressFill" style="width:0%"></div>
           <div class="progress-dot" style="left:0%"></div>
         </div>
-        <span class="progress-time right" id="totalTime">0:00</span>
+        <span class="progress-time" id="totalTime">0:00</span>
       </div>
-      <div class="ctrl-btns">
-        <button class="ctrl-btn" onclick="toggleMode()" id="modeBtn" title="播放模式">
+      <div class="ctrl-right">
+        <button class="ctrl-btn" onclick="toggleMode()" id="modeBtn" title="循环播放">
           <svg viewBox="0 0 24 24"><path d="M17 17h-3l4-4 4 4h-3v3a5 5 0 0 1-5 5l-1.5-1.5A3.5 3.5 0 0 0 17 20v-3zM7 7h3L6 3 2 7h3v3a5 5 0 0 0 5 5l1.5-1.5A3.5 3.5 0 0 1 7 10V7z"/></svg>
         </button>
-        <button class="ctrl-btn" onclick="prevSong()">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-        </button>
-        <button class="ctrl-btn main-btn" id="playBtn" onclick="togglePlay()">
-          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <button class="ctrl-btn" onclick="nextSong()">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 4.96 3.14L8 16.14V9.86zM16 6h2v12h-2z"/></svg>
+        <button class="ctrl-btn" onclick="cyclePlayTab()" title="歌单切换">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
         </button>
         <button class="ctrl-btn fav-btn" onclick="toggleFav()" id="favBtn">
           <svg id="favIcon" viewBox="0 0 24 24"><path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg>
@@ -431,17 +441,20 @@ async function playCur() {
 function updateSongUI(song) {
   document.getElementById('songName').textContent = song.name || '-';
   document.getElementById('songArtist').textContent = song.artist || '-';
-  const len = playlist.length;
-  const wrap = (url, size) => {
-    const inner = url ? `<img src="${url}?param=${size||'200y200'}">` : `<div class="cover-placeholder">🎵</div>`;
-    return `<div class="cover-wrap"><div class="cover-inner">${inner}</div></div>`;
+  const mkInner = (url, size) => url
+    ? `<img src="${url}?param=${size||'200y200'}">`
+    : `<div class="cover-placeholder">🎵</div>`;
+  const setInner = (id, url, size) => {
+    const el = document.querySelector('#' + id + ' .cover-inner');
+    if (el) el.innerHTML = mkInner(url, size);
   };
+  const len = playlist.length;
   const at = i => playlist[(i + len) % len];
-  document.getElementById('coverFarPrev').innerHTML = len > 1 ? wrap(at(curIdx-2)?.cover) : wrap('');
-  document.getElementById('coverPrev').innerHTML    = len > 0 ? wrap(at(curIdx-1)?.cover) : wrap('');
-  document.getElementById('coverCur').innerHTML     = wrap(song.cover, '300y300');
-  document.getElementById('coverNext').innerHTML    = len > 1 ? wrap(at(curIdx+1)?.cover) : wrap('');
-  document.getElementById('coverFarNext').innerHTML = len > 1 ? wrap(at(curIdx+2)?.cover) : wrap('');
+  setInner('coverCur', song.cover, '300y300');
+  setInner('coverPrev',    len > 0 ? at(curIdx-1)?.cover : null);
+  setInner('coverNext',    len > 1 ? at(curIdx+1)?.cover : null);
+  setInner('coverFarPrev', len > 1 ? at(curIdx-2)?.cover : null);
+  setInner('coverFarNext', len > 1 ? at(curIdx+2)?.cover : null);
   document.title = (song.name || '音乐') + ' - 小克&小猫';
   renderPlaylist();
 }
@@ -554,7 +567,13 @@ function renderPlaylist() {
 }
 function playSongAt(idx) { curIdx = idx; playCur(); }
 function removeSong(idx) { playlist.splice(idx,1); if(curIdx>=playlist.length) curIdx=Math.max(0,playlist.length-1); savePlaylist(); }
-function clearPlaylist() { playlist=[]; curIdx=0; audio.pause(); audio.src=''; isPlaying=false; setPlayIcon(false); savePlaylist(); document.getElementById('songName').textContent='未在播放'; document.getElementById('songArtist').textContent='-'; }
+function clearPlaylist() { playlist=[]; curIdx=0; audio.pause(); audio.src=''; isPlaying=false; setPlayIcon(false); savePlaylist(); document.getElementById('songName').textContent='未在播放'; document.getElementById('songArtist').textContent='-'; document.querySelector('#coverCur .cover-inner').innerHTML='<div class="cover-placeholder">🎶</div>'; }
+const _tabOrder = ['heart','recommend','koko'];
+function cyclePlayTab() {
+  const i = _tabOrder.indexOf(currentPlayTab);
+  switchPlayTab(_tabOrder[(i+1) % _tabOrder.length]);
+  showToast(['心动','推荐','歌单'][_tabOrder.indexOf(currentPlayTab)]);
+}
 function savePlaylist() { localStorage.setItem('nease_playlist', JSON.stringify(playlist)); }
 
 // ====== 播放 tab：心动/推荐/歌单 ======
