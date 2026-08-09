@@ -564,12 +564,11 @@ async function openLogin() {
         const s = await res.json();
         // 调试：显示当前状态
         document.getElementById('qrTip').textContent = `状态 ${s.code} | sess:${qrSession.slice(0,15)||'空'} | ck:${(s.cookie||'').slice(0,15)}`;
-        if (s.code === 801) {
-          // 保存NMTID session（作为URL参数传给下次check）
-          const rawSess = s._cookie || s.cookie || '';
-          if (rawSess) qrSession = parseCookieForHeader(rawSess);
-        } else if (s.code === 802) {
-          document.getElementById('qrTip').textContent = '✅ 扫码成功，请在网易云App确认…';
+        // 每次都更新qrSession（801/802都要存，803前需要最新的cookie）
+        const rawSess = s._cookie || s.cookie || '';
+        if (rawSess) qrSession = parseCookieForHeader(rawSess);
+        if (s.code === 802) {
+          document.getElementById('qrTip').textContent = `✅ 扫码成功，网易云确认中… sess:${qrSession.slice(0,20)}`;
         }
         if (s.code === 803) {
           clearInterval(qrTimer);
