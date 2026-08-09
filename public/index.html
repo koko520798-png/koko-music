@@ -519,17 +519,45 @@ function addToPlaylist(song, notify = true) {
   }
 }
 
+// iOS PWA 音频解锁：动态构造最小静音WAV blob，作为合法src让 play() 真正解锁audio
+// audio.src 为空时 play() 会因"无音源"被拒绝，不算解锁——必须有合法src
+let _silentUrl = null;
+function getSilentUrl() {
+  if (_silentUrl) return _silentUrl;
+  const wav = new Uint8Array(46);
+  const dv = new DataView(wav.buffer);
+  dv.setUint32(0, 0x52494646, false);  // "RIFF"
+  dv.setUint32(4, 38, true);            // 文件剩余大小
+  dv.setUint32(8, 0x57415645, false);  // "WAVE"
+  dv.setUint32(12, 0x666d7420, false); // "fmt "
+  dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true);            // PCM
+  dv.setUint16(22, 1, true);            // mono
+  dv.setUint32(24, 44100, true);        // sample rate
+  dv.setUint32(28, 88200, true);        // byte rate
+  dv.setUint16(32, 2, true);
+  dv.setUint16(34, 16, true);           // bits per sample
+  dv.setUint32(36, 0x64617461, false); // "data"
+  dv.setUint32(40, 2, true);
+  dv.setUint16(44, 0, true);            // 一个静音采样
+  _silentUrl = URL.createObjectURL(new Blob([wav], {type:'audio/wav'}));
+  return _silentUrl;
+}
+
 async function playCur() {
   if (!playlist.length) return;
   const song = playlist[curIdx];
   updateSongUI(song);
   updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
   try {
-    // iOS PWA：在用户手势同步上下文里先 load 解锁 audio，避免 await 之后被系统拦截
-    try { audio.load(); } catch(_) {}
+    // iOS PWA：await之前（仍在用户手势同步上下文）用合法静音src真正解锁audio
+    audio.src = getSilentUrl();
+    audio.muted = true;
+    audio.play().catch(() => {});
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
-    if (!url) { showToast('此歌曲暂无版权'); nextSong(); return; }
+    if (!url) { audio.muted = false; showToast('此歌曲暂无版权'); nextSong(); return; }
+    audio.muted = false;
     audio.src = url;
     const playPromise = audio.play();
     if (playPromise) playPromise.catch(() => {});
@@ -538,7 +566,7 @@ async function playCur() {
     // 加载歌词
     loadLyric(song.id);
     localStorage.setItem('nease_curIdx', curIdx);
-  } catch(e) { showToast('播放失败'); }
+  } catch(e) { audio.muted = false; showToast('播放失败'); }
 }
 
 function updateSongUI(song) {
@@ -1108,17 +1136,13 @@ window.addEventListener('DOMContentLoaded', () => {
     loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
   }
-  // iOS PWA：首次用户触摸时真正解锁 audio 元素
-  // 必须调用 play() 才算，load() 不够 —— iOS 认可的是真实的 play 手势
+  // iOS PWA：首次用户触摸时用合法静音src解锁audio（空src的play()不算解锁）
   document.addEventListener('touchstart', function unlockAudio() {
+    audio.src = getSilentUrl();
     audio.muted = true;
-    const p = audio.play();
-    if (p) {
-      p.then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; })
-       .catch(() => { audio.muted = false; });
-    } else {
-      audio.pause(); audio.currentTime = 0; audio.muted = false;
-    }
+    audio.play()
+      .then(() => { audio.pause(); audio.muted = false; })
+      .catch(() => { audio.muted = false; });
   }, { once: true, passive: true });
 });
 </script>
