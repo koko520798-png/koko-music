@@ -401,6 +401,19 @@ let lyricLines = [];
 let lyricTimers = [];
 let qrTimer = null;
 
+// 接收家里传来的登录状态（解决iOS iframe localStorage隔离问题）
+window.addEventListener('message', function(e) {
+  if (!e.data || e.data.action !== 'setAuth') return;
+  if (e.data.cookie) {
+    cookie = e.data.cookie;
+    localStorage.setItem('nease_cookie', cookie);
+  }
+  if (e.data.user && e.data.user !== 'null') {
+    try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
+  }
+  if (cookie) { renderMyPage(); loadLikedSongs(); }
+});
+
 // 返回：在iframe里就通知家里关掉overlay，单独访问就正常history.back()
 function goBack() {
   if (window.parent !== window) {
@@ -912,6 +925,10 @@ async function openLogin() {
             closeLogin();
             showToast('🎉 登录成功！');
             renderMyPage();
+            // 登录成功：把cookie回传给家里保存（防iOS iframe存储被清）
+            if (window.parent !== window) {
+              window.parent.postMessage({action:'saveAuth', cookie:cookie, user:JSON.stringify(userInfo)}, '*');
+            }
           } else {
             // cookie为空时尝试直接拉用户信息
             await fetchUserInfo();
