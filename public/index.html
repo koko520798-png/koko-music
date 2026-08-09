@@ -402,6 +402,7 @@ let lyricTimers = [];
 let qrTimer = null;
 
 // 接收家里传来的登录状态（解决iOS iframe localStorage隔离问题）
+// 只静默设置变量，不调用renderMyPage（避免fetchUserInfo失败时清掉cookie）
 window.addEventListener('message', function(e) {
   if (!e.data || e.data.action !== 'setAuth') return;
   if (e.data.cookie) {
@@ -411,7 +412,7 @@ window.addEventListener('message', function(e) {
   if (e.data.user && e.data.user !== 'null') {
     try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
   }
-  if (cookie) { renderMyPage(); loadLikedSongs(); }
+  if (cookie && !userInfo) loadLikedSongs(); // userInfo已有时不重复拉，只加载爱心歌单
 });
 
 // 返回：在iframe里就通知家里关掉overlay，单独访问就正常history.back()
