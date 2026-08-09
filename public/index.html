@@ -268,14 +268,22 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
       <div class="ctrl-left">
         <!-- 上一首：返回上一首听过的歌（历史记录） -->
         <button class="ctrl-btn skip-btn" onclick="prevSong()">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="5.5" width="2.5" height="13" rx="1.25"/>
+            <path d="M9.5 12l8.5 5.5V6.5z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
         </button>
         <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">
-          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
         </button>
         <!-- 下一首：skip_next样式（三角+竖线） -->
         <button class="ctrl-btn skip-btn" onclick="nextSong()">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14.5 12L6 17.5V6.5z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <rect x="15.5" y="5.5" width="2.5" height="13" rx="1.25"/>
+          </svg>
         </button>
       </div>
       <div class="ctrl-mid">
@@ -668,7 +676,7 @@ function togglePlay() {
 }
 function setPlayIcon(playing) {
   document.getElementById('playIcon').innerHTML = playing
-    ? '<rect x="5" y="4" width="4" height="16" rx="2"/><rect x="15" y="4" width="4" height="16" rx="2"/>'
+    ? '<rect x="5.5" y="4" width="3.5" height="16" rx="1.75"/><rect x="15" y="4" width="3.5" height="16" rx="1.75"/>'
     : '<path d="M8 5v14l11-7z"/>';
 }
 // 播放历史栈：记录听过的歌（存curIdx），最多保留50条
