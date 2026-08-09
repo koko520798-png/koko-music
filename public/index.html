@@ -617,7 +617,7 @@ async function fetchUserInfo() {
 // ====== 我的页 ======
 async function renderMyPage() {
   const el = document.getElementById('myPageContent');
-  if (!cookie || !userInfo) {
+  if (!cookie) {
     el.innerHTML = `
       <div class="login-prompt">
         <div style="font-size:64px;margin-bottom:16px">🎵</div>
@@ -625,6 +625,22 @@ async function renderMyPage() {
         <button class="login-btn" onclick="openLogin()">扫码登录</button>
       </div>`;
     return;
+  }
+  // cookie有了但userInfo没有（比如刷新后），先拉一次
+  if (!userInfo) {
+    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text2)">⏳ 加载中…</div>`;
+    await fetchUserInfo();
+    if (!userInfo) {
+      // 拉取失败说明cookie过期
+      cookie = ''; localStorage.removeItem('nease_cookie');
+      el.innerHTML = `
+        <div class="login-prompt">
+          <div style="font-size:64px;margin-bottom:16px">🎵</div>
+          <p>登录已过期，请重新登录</p>
+          <button class="login-btn" onclick="openLogin()">扫码登录</button>
+        </div>`;
+      return;
+    }
   }
   const avatarHtml = userInfo.avatarUrl ? `<img src="${userInfo.avatarUrl}">` : '🎵';
   el.innerHTML = `
