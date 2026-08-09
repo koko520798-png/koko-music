@@ -298,12 +298,15 @@ const audio = document.getElementById('audio');
 // 把 Set-Cookie 格式（含 Max-Age/Path 等）解析成纯 Cookie 请求头格式
 function parseCookieForHeader(setCookieStr) {
   if (!setCookieStr) return '';
-  // 多个cookie之间用", "分隔（逗号后跟cookie名称）
-  // 每个cookie第一个;之前是 name=value
+  // 兼容两种格式：
+  // 1. Set-Cookie头（逗号分隔）："MUSIC_U=xxx; Max-Age=..., NMTID=yyy; ..."
+  // 2. NeteaseCloudMusicApi body.cookie（分号拼接）："MUSIC_U=xxx; Max-Age=...;NMTID=yyy; ..."
+  // 方案：按所有 ; 和 , 分割，过滤掉 cookie 属性名，保留所有 name=value 对
+  const ATTRS = /^(max-age|path|domain|expires|samesite|secure|httponly)(\s*=|$)/i;
   return setCookieStr
-    .split(/,(?=\s*[a-zA-Z_\-]+=)/)
-    .map(c => c.trim().split(';')[0].trim())
-    .filter(Boolean)
+    .split(/[;,]+/)
+    .map(p => p.trim())
+    .filter(p => p && !ATTRS.test(p))
     .join('; ');
 }
 
@@ -617,8 +620,13 @@ async function fetchUserInfo() {
 // ====== 我的页 ======
 async function renderMyPage() {
   const el = document.getElementById('myPageContent');
+  // 调试：显示当前状态
+  const dbg = `<div style="font-size:10px;color:#aaa;padding:8px 16px;word-break:break-all">
+    ck:${cookie?cookie.slice(0,25)+'…':'空'} | user:${userInfo?.nickname||'null'}
+    <button onclick="cookie='';userInfo=null;localStorage.clear();renderMyPage()" style="font-size:10px;margin-left:8px;color:red;background:none;border:none">退出</button>
+  </div>`;
   if (!cookie) {
-    el.innerHTML = `
+    el.innerHTML = dbg + `
       <div class="login-prompt">
         <div style="font-size:64px;margin-bottom:16px">🎵</div>
         <p>登录网易云账号，同步你的歌单</p>
@@ -626,14 +634,13 @@ async function renderMyPage() {
       </div>`;
     return;
   }
-  // cookie有了但userInfo没有（比如刷新后），先拉一次
+  // cookie有了但userInfo没有，先拉一次
   if (!userInfo) {
-    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text2)">⏳ 加载中…</div>`;
+    el.innerHTML = dbg + `<div style="padding:40px;text-align:center;color:var(--text2)">⏳ 加载中…</div>`;
     await fetchUserInfo();
     if (!userInfo) {
-      // 拉取失败说明cookie过期
       cookie = ''; localStorage.removeItem('nease_cookie');
-      el.innerHTML = `
+      el.innerHTML = `<div style="font-size:10px;color:#aaa;padding:8px 16px">ck空 user:null</div>
         <div class="login-prompt">
           <div style="font-size:64px;margin-bottom:16px">🎵</div>
           <p>登录已过期，请重新登录</p>
