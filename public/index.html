@@ -294,10 +294,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
       <div class="ctrl-right">
         <!-- 加入/移除koko歌单 -->
         <button class="ctrl-btn" id="kokoBtn" onclick="toggleKoko()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <circle cx="12" cy="12" r="9"/>
-            <line x1="12" y1="8.5" x2="12" y2="15.5"/>
-            <line x1="8.5" y1="12" x2="15.5" y2="12"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="8.5"/>
+            <line x1="12" y1="9" x2="12" y2="15"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
           </svg>
         </button>
         <!-- bullet list（带小圆点的歌单） -->
@@ -369,7 +369,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 </div>
 
 <!-- 音频 -->
-<audio id="audio" preload="none" autoplay muted playsinline webkit-playsinline></audio>
+<audio id="audio" preload="none"></audio>
 
 <script>
 const API = '/api/netease?key=xiaomao520';
@@ -556,12 +556,16 @@ async function playCur() {
     if (!url) { showToast('此歌曲暂无版权'); nextSong(); return; }
     audio.src = url;
     const playPromise = audio.play();
-    if (playPromise) playPromise.catch(() => {});
+    if (playPromise) playPromise.catch((err) => {
+      showToast('播放错误: ' + (err?.name || err));
+      isPlaying = false;
+      setPlayIcon(false);
+    });
     isPlaying = true;
     setPlayIcon(true);
     loadLyric(song.id);
     localStorage.setItem('nease_curIdx', curIdx);
-  } catch(e) { showToast('播放失败'); }
+  } catch(e) { showToast('播放失败: ' + (e?.message || e)); }
 }
 
 function updateSongUI(song) {
@@ -1205,10 +1209,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // 后台预热koko歌单（切歌时updateKokoBtn能立刻响应）
     ensureKokoPlaylist().catch(() => {});
   }
-  // iOS PWA：首次用户触摸取消静音（audio有autoplay muted，iOS允许静音自动播放）
-  // 第一次触摸后 audio.muted=false，之后所有播放都有声音
+  // iOS PWA：首次触摸时用合法src解锁audio
   document.addEventListener('touchstart', function unlockAudio() {
-    audio.muted = false;
+    audio.src = getSilentUrl();
+    audio.muted = true;
+    audio.play()
+      .then(() => { audio.pause(); audio.muted = false; })
+      .catch(() => { audio.muted = false; });
   }, { once: true, passive: true });
 });
 </script>
