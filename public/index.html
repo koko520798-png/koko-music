@@ -15,15 +15,16 @@
   --active:#e07090;--shadow:0 4px 20px rgba(224,112,144,0.15);
 }
 body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;min-height:100vh;overflow-x:hidden}
-/* ====== 顶部导航 ====== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:env(safe-area-inset-top,0) 16px 0;background:var(--bg);border-bottom:1px solid var(--border)}
-/* 播放页隐藏顶部导航，用小胶囊替代 */
-body.play-active .nav{display:none}
-body.play-active .main{padding-top:0}
-.nav-inner{display:flex;align-items:center;height:52px;gap:12px}
-.nav-back{width:32px;height:32px;border:none;background:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.nav-title{flex:1;font-size:17px;font-weight:600;color:var(--text)}
-.nav-login-btn{font-size:13px;color:var(--pink-deep);border:1px solid var(--pink);border-radius:20px;padding:4px 12px;background:none;cursor:pointer}
+/* ====== 顶部小胶囊（全局固定，替代原来的顶部导航栏） ====== */
+.top-nav-capsule{
+  position:fixed;top:calc(env(safe-area-inset-top,0) + 8px);left:44px;right:44px;
+  z-index:100;padding:5px 10px;gap:6px;
+  display:flex;align-items:center;
+  background:rgba(255,255,255,.82);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  border:.5px solid rgba(255,255,255,.60);border-radius:999px;
+  box-shadow:0 2px 12px rgba(224,112,144,.12)
+}
 /* ====== 底部tab ====== */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--border);
   padding:0 0 env(safe-area-inset-bottom,0);display:flex}
@@ -31,12 +32,10 @@ body.play-active .main{padding-top:0}
 .tab.active{color:var(--active)}
 .tab-icon{font-size:22px}
 /* ====== 主内容 ====== */
-.main{padding-top:calc(52px + env(safe-area-inset-top,0));padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
+.main{padding-top:calc(env(safe-area-inset-top,0) + 54px);padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
 .page{display:none;min-height:100%}
 .page.active{display:block}
 /* ====== 播放页 ====== */
-/* 顶部小胶囊导航 */
-.top-nav-capsule{display:flex;align-items:center;margin:10px 48px 0;padding:5px 10px;gap:6px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:.5px solid rgba(255,255,255,.55);border-radius:999px;box-shadow:0 2px 10px rgba(224,112,144,.10)}
 .tnc-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:3px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
 .tnc-btn svg{width:17px;height:17px;fill:currentColor}
 .tnc-mid{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
@@ -186,29 +185,15 @@ body.play-active .main{padding-top:0}
 .empty-icon{font-size:48px;margin-bottom:12px}
 </style>
 </head>
-<body class="play-active">
+<body>
 
-<!-- 顶部导航 -->
-<div class="nav">
-  <div class="nav-inner">
-    <button class="nav-back" onclick="history.back()">‹</button>
-    <div class="nav-title" id="navTitle">🎵 音乐</div>
-    <button class="nav-login-btn" id="loginBtn" onclick="openLogin()">登录</button>
-  </div>
-</div>
-
-<!-- 主内容 -->
-<div class="main">
-
-  <!-- 播放页 -->
-  <div class="page active" id="page-play">
-    <!-- 顶部小胶囊：返回/播放模式/设置 -->
-    <div class="top-nav-capsule">
+<!-- 全局顶部小胶囊（替代原导航栏，三个页面共用） -->
+<div class="top-nav-capsule">
       <button class="tnc-btn" onclick="history.back()">
         <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
       </button>
-      <!-- 中间：随机/循环切换 -->
-      <div class="tnc-mid" onclick="togglePlayMode()">
+      <!-- 中间：播放页=随机/循环切换图标，其他页=页面名称 -->
+      <div class="tnc-mid" id="tncMid" onclick="tncMidClick()">
         <svg id="tncModeIcon" viewBox="0 0 24 24"><path id="tncModePath" d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v5z"/></svg>
       </div>
       <!-- 右：空心设置图标 -->
@@ -218,7 +203,13 @@ body.play-active .main{padding-top:0}
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
       </button>
-    </div>
+</div>
+
+<!-- 主内容 -->
+<div class="main">
+
+  <!-- 播放页 -->
+  <div class="page active" id="page-play">
     <!-- 封面轮播 - 5卡叠叠拍立得 -->
     <div class="cover-carousel" id="carousel">
       <div class="covers-track" id="coversTrack">
@@ -380,14 +371,30 @@ let lyricTimers = [];
 let qrTimer = null;
 
 // ====== Tab切换 ======
+let currentTab = 'play';
 function switchTab(tab) {
+  currentTab = tab;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
-  // 播放页隐藏顶部导航栏
-  document.body.classList.toggle('play-active', tab === 'play');
+  updateCapsuleMid(tab);
   if (tab === 'my') renderMyPage();
+}
+// 顶部胶囊中间：播放页=模式图标，其他页=文字
+function updateCapsuleMid(tab) {
+  const mid = document.getElementById('tncMid');
+  if (!mid) return;
+  if (tab === 'play') {
+    mid.innerHTML = `<svg id="tncModeIcon" viewBox="0 0 24 24"><path id="tncModePath" d="${playMode===0?LOOP_PATH:SHUFFLE_PATH}"/></svg>`;
+  } else {
+    const labels = {search:'搜索', my:'我的'};
+    mid.innerHTML = `<span style="font-size:13px;font-weight:600;color:var(--text)">${labels[tab]||''}</span>`;
+  }
+}
+// 胶囊中间点击处理
+function tncMidClick() {
+  if (currentTab === 'play') togglePlayMode();
 }
 
 // ====== API请求 ======
@@ -568,6 +575,7 @@ const SHUFFLE_PATH = 'M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04
 function updateModeIcon() {
   const p = document.getElementById('tncModePath');
   if (p) p.setAttribute('d', playMode === 0 ? LOOP_PATH : SHUFFLE_PATH);
+  else updateCapsuleMid(currentTab); // 元素不存在时重新渲染
 }
 function togglePlayMode() {
   playMode = playMode === 0 ? 1 : 0;
@@ -753,7 +761,6 @@ async function fetchUserInfo() {
     const d = await api('/user/account');
     userInfo = d.profile;
     localStorage.setItem('nease_user', JSON.stringify(userInfo));
-    document.getElementById('loginBtn').textContent = userInfo?.nickname || '已登录';
   } catch(e) {}
 }
 
@@ -892,7 +899,6 @@ function showToast(msg) {
 window.addEventListener('DOMContentLoaded', () => {
   updateModeIcon(); // 初始化顶部胶囊模式图标
   if (cookie && userInfo) {
-    document.getElementById('loginBtn').textContent = userInfo.nickname || '已登录';
     switchPlayTab('heart');
   }
 });
