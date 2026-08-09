@@ -353,7 +353,7 @@ async function doSearch() {
   const el = document.getElementById('resultList');
   el.innerHTML = '<div class="loading"><span class="spin">⏳</span> 搜索中…</div>';
   try {
-    const d = await api('/search', { keywords: kw, limit: 20 });
+    const d = await api('/cloudsearch', { keywords: kw, limit: 20 });
     const songs = d.result?.songs || [];
     if (!songs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">😶</div><div>没找到结果</div></div>'; return; }
     // 存到全局数组，避免onclick里JSON特殊字符导致失效
@@ -364,7 +364,7 @@ async function doSearch() {
       cover: s.al?.picUrl || s.album?.picUrl || ''
     }));
     el.innerHTML = searchResults.map((s, i) => {
-      const cover = s.cover ? s.cover + '?param=80y80' : '';
+      const cover = s.cover ? s.cover + '?param=300y300' : '';
       return `<li class="result-item" onclick="addAndPlay(searchResults[${i}])">
         <div class="ri-cover">${cover ? `<img src="${cover}">` : '🎵'}</div>
         <div class="ri-info"><div class="ri-name">${s.name}</div><div class="ri-sub">${s.artist}</div></div>
@@ -532,7 +532,7 @@ function renderPlaylist() {
   document.getElementById('playlistLabel').textContent = `播放列表 (${playlist.length})`;
   el.innerHTML = playlist.map((s, i) => `
     <li class="song-item ${i===curIdx?'playing':''}" onclick="playSongAt(${i})">
-      <div class="si-cover">${s.cover ? `<img src="${s.cover}?param=80y80">` : (i===curIdx?'♪':'🎵')}</div>
+      <div class="si-cover">${s.cover ? `<img src="${s.cover}?param=200y200">` : (i===curIdx?'♪':'🎵')}</div>
       <div class="si-info"><div class="si-name">${s.name}</div><div class="si-sub">${s.artist||''}</div></div>
       <button onclick="event.stopPropagation();removeSong(${i})" style="background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px">×</button>
     </li>`).join('');
@@ -712,7 +712,7 @@ async function renderMyPage() {
       </div>
       ${otherPls.map((pl, i) => `
       <div class="my-pl-item" onclick="loadPlaylist(window._myPlaylists[${i+1}].id, window._myPlaylists[${i+1}].name)">
-        <div class="my-pl-cover">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=80y80">` : '🎵'}</div>
+        <div class="my-pl-cover">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=200y200">` : '🎵'}</div>
         <div class="my-pl-info">
           <div class="my-pl-name">${pl.name}</div>
           <div class="my-pl-desc">歌单 · ${pl.trackCount}首 · ${pl.creator?.nickname || ''}</div>
