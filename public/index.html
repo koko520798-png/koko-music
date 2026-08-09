@@ -676,7 +676,7 @@ function togglePlay() {
 function setPlayIcon(playing) {
   document.getElementById('playIcon').innerHTML = playing
     ? '<rect x="5.5" y="4" width="3.5" height="16" rx="1.75"/><rect x="15" y="4" width="3.5" height="16" rx="1.75"/>'
-    : '<path d="M8 5v14l11-7z"/>';
+    : '<path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
 }
 // 播放历史栈：记录听过的歌（存curIdx），最多保留50条
 let playHistory = [];
