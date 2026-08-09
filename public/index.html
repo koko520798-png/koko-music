@@ -551,21 +551,21 @@ async function openLogin() {
     document.getElementById('qrBox').innerHTML = qrImg ? `<img src="${qrImg}" style="width:100%;height:100%">` : '<div class="spin">⏳</div>';
     document.getElementById('qrTip').textContent = '用手机网易云音乐扫码登录';
     // 3. 轮询状态（1秒一次）
-    // qrSession：每次check拿到的NMTID，下次check带上去，让网易云认出我们的会话
+    // qrSession：把NMTID以 cookie= URL参数形式传给netease-api（不是Cookie头！）
+    // 因为NeteaseCloudMusicApi读的是 query.cookie，不是HTTP Cookie头
     let qrSession = '';
     if (qrTimer) clearInterval(qrTimer);
     qrTimer = setInterval(async () => {
       try {
-        // 带session cookie发请求
-        const checkUrl = `${API}&path=${encodeURIComponent('/login/qr/check')}&key=${encodeURIComponent(unikey)}`;
-        const fetchOpts = {};
-        if (qrSession) fetchOpts.headers = { 'Cookie': qrSession };
-        const res = await fetch(checkUrl, fetchOpts);
+        // cookie作为URL参数传入（netease-api的createOption读query.cookie）
+        const cookieParam = qrSession ? `&cookie=${encodeURIComponent(qrSession)}` : '';
+        const checkUrl = `${API}&path=${encodeURIComponent('/login/qr/check')}&key=${encodeURIComponent(unikey)}${cookieParam}`;
+        const res = await fetch(checkUrl);
         const s = await res.json();
         // 调试：显示当前状态
-        document.getElementById('qrTip').textContent = `状态 ${s.code} | sess:${qrSession.slice(0,15)||'空'} | ck:${(s.cookie||'').slice(0,15)} | _ck:${(s._cookie||'').slice(0,15)}`;
+        document.getElementById('qrTip').textContent = `状态 ${s.code} | sess:${qrSession.slice(0,15)||'空'} | ck:${(s.cookie||'').slice(0,15)}`;
         if (s.code === 801) {
-          // 保存NMTID session，下次check带着
+          // 保存NMTID session（作为URL参数传给下次check）
           const rawSess = s._cookie || s.cookie || '';
           if (rawSess) qrSession = parseCookieForHeader(rawSess);
         } else if (s.code === 802) {
