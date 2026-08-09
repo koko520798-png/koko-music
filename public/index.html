@@ -1108,10 +1108,17 @@ window.addEventListener('DOMContentLoaded', () => {
     loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
   }
-  // iOS PWA：首次用户触摸时提前解锁 audio 元素（拿到手势上下文授权）
+  // iOS PWA：首次用户触摸时真正解锁 audio 元素
+  // 必须调用 play() 才算，load() 不够 —— iOS 认可的是真实的 play 手势
   document.addEventListener('touchstart', function unlockAudio() {
-    try { audio.load(); } catch(_) {}
-    document.removeEventListener('touchstart', unlockAudio);
+    audio.muted = true;
+    const p = audio.play();
+    if (p) {
+      p.then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; })
+       .catch(() => { audio.muted = false; });
+    } else {
+      audio.pause(); audio.currentTime = 0; audio.muted = false;
+    }
   }, { once: true, passive: true });
 });
 </script>
