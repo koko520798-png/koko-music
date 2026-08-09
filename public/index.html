@@ -292,12 +292,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         </div>
       </div>
       <div class="ctrl-right">
-        <!-- 加入/移除koko歌单（同款家里左下角➕图标） -->
+        <!-- 加入/移除koko歌单 -->
         <button class="ctrl-btn" id="kokoBtn" onclick="toggleKoko()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="8.5" x2="12" y2="15.5"/>
+            <line x1="8.5" y1="12" x2="15.5" y2="12"/>
           </svg>
         </button>
         <!-- bullet list（带小圆点的歌单） -->
@@ -369,7 +369,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 </div>
 
 <!-- 音频 -->
-<audio id="audio" preload="none"></audio>
+<audio id="audio" preload="none" autoplay muted playsinline webkit-playsinline></audio>
 
 <script>
 const API = '/api/netease?key=xiaomao520';
@@ -551,23 +551,17 @@ async function playCur() {
   updateSongUI(song);
   updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
   try {
-    // iOS PWA：await之前（仍在用户手势同步上下文）用合法静音src真正解锁audio
-    audio.src = getSilentUrl();
-    audio.muted = true;
-    audio.play().catch(() => {});
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
-    if (!url) { audio.muted = false; showToast('此歌曲暂无版权'); nextSong(); return; }
-    audio.muted = false;
+    if (!url) { showToast('此歌曲暂无版权'); nextSong(); return; }
     audio.src = url;
     const playPromise = audio.play();
     if (playPromise) playPromise.catch(() => {});
     isPlaying = true;
     setPlayIcon(true);
-    // 加载歌词
     loadLyric(song.id);
     localStorage.setItem('nease_curIdx', curIdx);
-  } catch(e) { audio.muted = false; showToast('播放失败'); }
+  } catch(e) { showToast('播放失败'); }
 }
 
 function updateSongUI(song) {
@@ -1211,33 +1205,10 @@ window.addEventListener('DOMContentLoaded', () => {
     // 后台预热koko歌单（切歌时updateKokoBtn能立刻响应）
     ensureKokoPlaylist().catch(() => {});
   }
-  // iOS PWA：首次触摸时解锁audio
-  // 如果有预加载的歌曲URL（audio.src已设好），直接play；否则用静音WAV兜底
+  // iOS PWA：首次用户触摸取消静音（audio有autoplay muted，iOS允许静音自动播放）
+  // 第一次触摸后 audio.muted=false，之后所有播放都有声音
   document.addEventListener('touchstart', function unlockAudio() {
-    if (window._prefetchedSong && audio.src && !isPlaying) {
-      const song = window._prefetchedSong;
-      window._prefetchedSong = null;
-      if (!playlist.length) {
-        playlist = window._prefetchedRecommend ? [...window._prefetchedRecommend] : [song];
-        curIdx = 0;
-        savePlaylist();
-        window._prefetchedRecommend = null;
-      }
-      updateSongUI(song);
-      updateFavIcon();
-      audio.muted = false;
-      audio.play().catch(() => {});
-      isPlaying = true;
-      setPlayIcon(true);
-      loadLyric(song.id);
-      localStorage.setItem('nease_curIdx', 0);
-    } else {
-      audio.src = getSilentUrl();
-      audio.muted = true;
-      audio.play()
-        .then(() => { audio.pause(); audio.muted = false; })
-        .catch(() => { audio.muted = false; });
-    }
+    audio.muted = false;
   }, { once: true, passive: true });
 });
 </script>
