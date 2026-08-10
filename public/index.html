@@ -490,6 +490,8 @@ let playlist = JSON.parse(localStorage.getItem('nease_playlist') || '[]');
 let curIdx = parseInt(localStorage.getItem('nease_curIdx') || '0');
 let cookie = localStorage.getItem('nease_cookie') || '';
 let userInfo = JSON.parse(localStorage.getItem('nease_user') || 'null');
+// 页面加载后立即预取当前歌曲URL（这样用户点播放时已有缓存，直接在手势上下文里play）
+setTimeout(() => schedulePrefetch(), 0);
 let isPlaying = false;
 let playMode = 1; // 0=循环 1=随机
 let lyricLines = [];
@@ -617,6 +619,25 @@ function addToPlaylist(song, notify = true) {
 // iOS PWA 音频解锁：动态构造最小静音WAV blob，作为合法src让 play() 真正解锁audio
 // audio.src 为空时 play() 会因"无音源"被拒绝，不算解锁——必须有合法src
 let _silentUrl = null;
+// ====== URL 预加载缓存（解决 iOS async play 限制）======
+const _urlCache = {};
+async function _prefetchUrl(songId) {
+  if (!songId || _urlCache[songId]) return;
+  try {
+    const d = await api('/song/url', { id: songId, br: 128000 });
+    const url = d.data?.[0]?.url;
+    if (url) _urlCache[songId] = url;
+  } catch(e) {}
+}
+function schedulePrefetch() {
+  if (!playlist.length) return;
+  const len = playlist.length;
+  const cur = playlist[curIdx];
+  if (cur) _prefetchUrl(cur.id);
+  const next = playlist[(curIdx + 1) % len];
+  if (next && next.id !== cur?.id) _prefetchUrl(next.id);
+}
+
 function getSilentUrl() {
   if (_silentUrl) return _silentUrl;
   const wav = new Uint8Array(46);
@@ -639,13 +660,45 @@ function getSilentUrl() {
   return _silentUrl;
 }
 
+function _doPlay(url, songId) {
+  // 同步执行：设 src 并立即 play（必须在手势上下文里或已有缓存URL时调用）
+  audio.muted = false;
+  audio.src = url;
+  const pp = audio.play();
+  if (pp) pp.catch(err => {
+    if (err?.name === 'AbortError') {
+      // 资源还在加载，等 canplay 后重试
+      audio.addEventListener('canplay', function once() {
+        audio.removeEventListener('canplay', once);
+        audio.play().catch(e2 => { showToast('播放失败: ' + (e2?.name || e2)); isPlaying = false; setPlayIcon(false); });
+      }, { once: true });
+    } else {
+      showToast('播放错误: ' + (err?.name || err));
+      isPlaying = false; setPlayIcon(false);
+    }
+  });
+  isPlaying = true;
+  setPlayIcon(true);
+  loadLyric(songId);
+  localStorage.setItem('nease_curIdx', curIdx);
+  schedulePrefetch(); // 预加载下一首
+}
+
 async function playCur() {
   if (!playlist.length) return;
   const song = playlist[curIdx];
   updateSongUI(song);
-  updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
-  // iOS PWA: await之前（手势同步上下文）用静音WAV先解锁audio
-  // 必须给src才能让play()成功激活（空src play()会因"无音源"失败不解锁）
+  updateFavIcon();
+
+  // ① 优先使用预加载缓存（整段在手势同步上下文里，iOS 不会拦）
+  const cached = _urlCache[song.id];
+  if (cached) {
+    delete _urlCache[song.id];
+    _doPlay(cached, song.id);
+    return;
+  }
+
+  // ② 没有缓存：先用静音WAV占住手势上下文，再 async 取 URL
   audio.src = getSilentUrl();
   audio.muted = true;
   audio.play().catch(() => {});
@@ -653,29 +706,7 @@ async function playCur() {
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
     if (!url) { audio.muted = false; showToast('此歌曲暂无版权'); nextSong(); return; }
-    audio.src = url;
-    audio.muted = false;
-    const playPromise = audio.play();
-    if (playPromise) playPromise.catch(err => {
-      if (err?.name === 'AbortError') {
-        // 资源还在加载中，等 canplay 后重试一次
-        audio.addEventListener('canplay', function once() {
-          audio.removeEventListener('canplay', once);
-          audio.play().catch(e2 => {
-            showToast('播放失败: ' + (e2?.name || e2));
-            isPlaying = false; setPlayIcon(false);
-          });
-        }, { once: true });
-      } else {
-        showToast('播放错误: ' + (err?.name || err));
-        isPlaying = false;
-        setPlayIcon(false);
-      }
-    });
-    isPlaying = true;
-    setPlayIcon(true);
-    loadLyric(song.id);
-    localStorage.setItem('nease_curIdx', curIdx);
+    _doPlay(url, song.id);
   } catch(e) { audio.muted = false; showToast('播放失败: ' + (e?.message || e)); }
 }
 
