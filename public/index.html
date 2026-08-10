@@ -617,16 +617,38 @@ function addToPlaylist(song, notify = true) {
 }
 
 // iOS PWA 音频解锁：动态构造最小静音WAV blob，作为合法src让 play() 真正解锁audio
-// audio.src 为空时 play() 会因"无音源"被拒绝，不算解锁——必须有合法src
-let _silentUrl = null;
 // ====== URL 预加载缓存（解决 iOS async play 限制）======
+// 用 data URI 替代 Blob URL——iOS 后台恢复后 Blob URL 可能失效，data URI 不会
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==';
+function getSilentUrl() { return SILENT_WAV; }
+
 const _urlCache = {};
+let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
+
 async function _prefetchUrl(songId) {
   if (!songId || _urlCache[songId]) return;
   try {
     const d = await api('/song/url', { id: songId, br: 128000 });
     const url = d.data?.[0]?.url;
-    if (url) _urlCache[songId] = url;
+    if (url) {
+      _urlCache[songId] = url;
+      // 如果用户在等这首歌（手势里已激活过audio），自动触发播放
+      if (_pendingPlay === songId) {
+        _pendingPlay = null;
+        delete _urlCache[songId];
+        audio.src = url;
+        audio.muted = false;
+        const pp = audio.play();
+        if (pp) pp.catch(err => {
+          showToast('播放失败: ' + (err?.name || err));
+          isPlaying = false; setPlayIcon(false);
+        });
+        isPlaying = true; setPlayIcon(true);
+        loadLyric(songId);
+        localStorage.setItem('nease_curIdx', curIdx);
+        schedulePrefetch();
+      }
+    }
   } catch(e) {}
 }
 function schedulePrefetch() {
@@ -636,28 +658,6 @@ function schedulePrefetch() {
   if (cur) _prefetchUrl(cur.id);
   const next = playlist[(curIdx + 1) % len];
   if (next && next.id !== cur?.id) _prefetchUrl(next.id);
-}
-
-function getSilentUrl() {
-  if (_silentUrl) return _silentUrl;
-  const wav = new Uint8Array(46);
-  const dv = new DataView(wav.buffer);
-  dv.setUint32(0, 0x52494646, false);  // "RIFF"
-  dv.setUint32(4, 38, true);            // 文件剩余大小
-  dv.setUint32(8, 0x57415645, false);  // "WAVE"
-  dv.setUint32(12, 0x666d7420, false); // "fmt "
-  dv.setUint32(16, 16, true);
-  dv.setUint16(20, 1, true);            // PCM
-  dv.setUint16(22, 1, true);            // mono
-  dv.setUint32(24, 44100, true);        // sample rate
-  dv.setUint32(28, 88200, true);        // byte rate
-  dv.setUint16(32, 2, true);
-  dv.setUint16(34, 16, true);           // bits per sample
-  dv.setUint32(36, 0x64617461, false); // "data"
-  dv.setUint32(40, 2, true);
-  dv.setUint16(44, 0, true);            // 一个静音采样
-  _silentUrl = URL.createObjectURL(new Blob([wav], {type:'audio/wav'}));
-  return _silentUrl;
 }
 
 function _doPlay(url, songId) {
@@ -698,16 +698,13 @@ async function playCur() {
     return;
   }
 
-  // ② 没有缓存：先用静音WAV占住手势上下文，再 async 取 URL
+  // ② 没有缓存：在手势里激活 audio，然后等预取完成自动播放
+  // data URI 不会被 iOS revoke，激活必然成功
   audio.src = getSilentUrl();
   audio.muted = true;
-  audio.play().catch(() => {});
-  try {
-    const d = await api('/song/url', { id: song.id, br: 128000 });
-    const url = d.data?.[0]?.url;
-    if (!url) { audio.muted = false; showToast('此歌曲暂无版权'); nextSong(); return; }
-    _doPlay(url, song.id);
-  } catch(e) { audio.muted = false; showToast('播放失败: ' + (e?.message || e)); }
+  audio.play().catch(() => {}); // 激活 audio element（手势上下文里）
+  _pendingPlay = song.id;       // 标记等待播放，预取完成后自动衔接
+  _prefetchUrl(song.id);        // 立即开始预取（如果还没开始）
 }
 
 function updateSongUI(song) {
@@ -1585,12 +1582,21 @@ async function _wpSave(dataUrl) {
 async function _wpLoad() {
   try {
     const db = await _wpDB();
-    return await new Promise(res => {
+    const idbData = await new Promise(res => {
       const tx = db.transaction('wp', 'readonly');
       const req = tx.objectStore('wp').get('cur');
       req.onsuccess = () => res(req.result || null);
       req.onerror = () => res(null);
     });
+    if (idbData) return idbData;
+    // IndexedDB 没有，尝试从旧 localStorage 迁移
+    const lsData = localStorage.getItem('koko_wallpaper');
+    if (lsData) {
+      await _wpSave(lsData); // 迁移到 IndexedDB
+      localStorage.removeItem('koko_wallpaper');
+      return lsData;
+    }
+    return null;
   } catch(e) { return localStorage.getItem('koko_wallpaper'); }
 }
 async function _wpDel() {
