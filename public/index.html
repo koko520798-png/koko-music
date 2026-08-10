@@ -490,6 +490,53 @@ function parseCookieForHeader(setCookieStr) {
     .join('; ');
 }
 
+// ====== 云端数据同步（歌单 + 壁纸，绕开iOS本地存储被清的问题）======
+const CLOUD_API = 'https://screentime-tracker-mu.vercel.app/api/koko-data?key=xiaomao520';
+
+async function cloudSavePlaylist(pl) {
+  try {
+    await fetch(CLOUD_API + '&type=playlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: pl }),
+    });
+  } catch(e) {}
+}
+
+async function cloudLoadPlaylist() {
+  try {
+    const r = await fetch(CLOUD_API + '&type=playlist');
+    const j = await r.json();
+    return Array.isArray(j.playlist) ? j.playlist : [];
+  } catch(e) { return []; }
+}
+
+async function cloudSaveWallpaper(dataUrl, mime) {
+  try {
+    const r = await fetch(CLOUD_API + '&type=wallpaper', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: dataUrl, mime: mime || 'image/jpeg' }),
+    });
+    const j = await r.json();
+    return j.url || null; // 服务器上的壁纸URL
+  } catch(e) { return null; }
+}
+
+async function cloudLoadWallpaperUrl() {
+  try {
+    const r = await fetch(CLOUD_API + '&type=wallpaper');
+    const j = await r.json();
+    return j.url || null;
+  } catch(e) { return null; }
+}
+
+async function cloudDeleteWallpaper() {
+  try {
+    await fetch(CLOUD_API + '&type=wallpaper', { method: 'DELETE' });
+  } catch(e) {}
+}
+
 // ====== 状态 ======
 let playlist = JSON.parse(localStorage.getItem('nease_playlist') || '[]');
 let curIdx = parseInt(localStorage.getItem('nease_curIdx') || '0');
@@ -497,6 +544,19 @@ let cookie = localStorage.getItem('nease_cookie') || '';
 let userInfo = JSON.parse(localStorage.getItem('nease_user') || 'null');
 // 页面加载后立即预取当前歌曲URL（这样用户点播放时已有缓存，直接在手势上下文里play）
 setTimeout(() => schedulePrefetch(), 0);
+
+// 如果playlist为空，异步从服务器恢复（iOS清了localStorage时救回来）
+if (!playlist.length) {
+  cloudLoadPlaylist().then(pl => {
+    if (pl.length && !playlist.length) {
+      playlist = pl;
+      localStorage.setItem('nease_playlist', JSON.stringify(pl));
+      renderPlaylist();
+      updateSongUI(playlist[curIdx] || playlist[0]);
+      schedulePrefetch();
+    }
+  });
+}
 let isPlaying = false;
 let playMode = 1; // 0=循环 1=随机
 let lyricLines = [];
@@ -1114,7 +1174,11 @@ function cyclePlayTab() {
   switchPlayTab(next);
 }
 function updateTncTitle() { /* no-op: top capsule now shows play mode icon */ }
-function savePlaylist() { localStorage.setItem('nease_playlist', JSON.stringify(playlist)); }
+function savePlaylist() {
+  localStorage.setItem('nease_playlist', JSON.stringify(playlist));
+  // 同步到服务器（后台，不阻塞UI）
+  cloudSavePlaylist(playlist);
+}
 
 // ====== 播放 tab：心动/推荐/歌单 ======
 let currentPlayTab = 'heart';
@@ -1632,8 +1696,18 @@ function handleWallpaperUpload(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = async e => {
-    await _wpSave(e.target.result);
-    _applyWallpaper(e.target.result);
+    const dataUrl = e.target.result;
+    const mime = file.type || 'image/jpeg';
+    // 先本地应用（即时生效）
+    _applyWallpaper(dataUrl);
+    showToast('壁纸设置中…');
+    // 同时存本地IndexedDB（快速恢复）+ 上传到服务器（持久化）
+    await _wpSave(dataUrl);
+    const cloudUrl = await cloudSaveWallpaper(dataUrl, mime);
+    if (cloudUrl) {
+      // 存服务器URL到IndexedDB（下次优先用服务器URL，节省本地空间）
+      await _wpSave(cloudUrl);
+    }
     showToast('壁纸已设置');
   };
   reader.readAsDataURL(file);
@@ -1645,14 +1719,25 @@ async function setWallpaper(url) {
     showToast('壁纸已设置');
   } else {
     await _wpDel();
+    cloudDeleteWallpaper();
     _applyWallpaper(null);
     showToast('已恢复默认');
   }
 }
-// 初始化壁纸（静默从 IndexedDB 恢复，不弹 toast）
+// 初始化壁纸（静默恢复，不弹 toast）
+// 优先IndexedDB（快），没有就从服务器URL拉（iOS清了本地的时候救回来）
 (async function() {
-  const wp = await _wpLoad();
-  if (wp) _applyWallpaper(wp);
+  const localWp = await _wpLoad();
+  if (localWp) {
+    _applyWallpaper(localWp);
+  } else {
+    // 本地没有，从服务器读URL
+    const cloudUrl = await cloudLoadWallpaperUrl();
+    if (cloudUrl) {
+      _applyWallpaper(cloudUrl);
+      await _wpSave(cloudUrl); // 存回IndexedDB备用
+    }
+  }
 })();
 
 // ====== 听歌识曲 ======
@@ -1784,7 +1869,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v7</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v8</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
