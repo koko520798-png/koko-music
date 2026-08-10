@@ -607,9 +607,16 @@ async function loadLyric(id) {
     if (yrcRaw) {
       lyricLines = parseYrc(yrcRaw);
     } else {
-      // fallback：普通lrc
+      // fallback：普通lrc（同一接口返回）
       const lrcRaw = d.lrc?.lyric || '';
       lyricLines = parseLyric(lrcRaw);
+    }
+    // 若 /lyric/new 拿不到歌词，再试旧接口 /lyric
+    if (!lyricLines.length) {
+      try {
+        const d2 = await api('/lyric', { id });
+        lyricLines = parseLyric(d2.lrc?.lyric || '');
+      } catch(e2) {}
     }
     if (!lyricLines.length) {
       document.getElementById('lyric-cur').textContent = '暂无歌词';
@@ -619,7 +626,10 @@ async function loadLyric(id) {
     try {
       const d2 = await api('/lyric', { id });
       lyricLines = parseLyric(d2.lrc?.lyric || '');
-    } catch(e2) {}
+      if (!lyricLines.length) document.getElementById('lyric-cur').textContent = '暂无歌词';
+    } catch(e2) {
+      document.getElementById('lyric-cur').textContent = '暂无歌词';
+    }
   }
 }
 
