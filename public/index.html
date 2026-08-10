@@ -469,6 +469,51 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 const API = '/api/netease?key=xiaomao520';
 const audio = document.getElementById('audio');
 
+// ====== 音频 Blob 本地缓存（iOS 解锁用，每次启动从 IndexedDB 还原 audio.src）======
+function _acDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('koko_ac', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('ac');
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function _saveAudioCache(url) {
+  try {
+    // 只缓存前 128KB，够激活 audio 即可，不浪费流量
+    const resp = await fetch(url, { headers: { Range: 'bytes=0-131071' } });
+    const blob = await resp.blob();
+    if (!blob.size) return;
+    const db = await _acDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction('ac', 'readwrite');
+      tx.objectStore('ac').put(blob, 'ready');
+      tx.oncomplete = res; tx.onerror = rej;
+    });
+  } catch(e) {}
+}
+let _acObjUrl = null;
+async function _loadAudioCache() {
+  try {
+    const db = await _acDB();
+    const blob = await new Promise(res => {
+      const tx = db.transaction('ac', 'readonly');
+      const req = tx.objectStore('ac').get('ready');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
+    });
+    if (blob && blob.size) {
+      if (_acObjUrl) URL.revokeObjectURL(_acObjUrl);
+      _acObjUrl = URL.createObjectURL(blob);
+      return _acObjUrl;
+    }
+  } catch(e) {}
+  return null;
+}
+// 页面加载时：先用 silent data URI 兜底，有缓存 blob 就换成 blob（本地，iOS 一定能播）
+audio.src = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==';
+_loadAudioCache().then(url => { if (url && !isPlaying) audio.src = url; });
+
 // ====== Cookie工具 ======
 // 把 Set-Cookie 格式（含 Max-Age/Path 等）解析成纯 Cookie 请求头格式
 function parseCookieForHeader(setCookieStr) {
@@ -670,6 +715,8 @@ function _doPlay(url, songId) {
   // 同步执行：设 src 并立即 play（必须在手势上下文里或已有缓存URL时调用）
   audio.muted = false;
   if (audio.src !== url) audio.src = url; // src 没变就不重设，避免触发 abort
+  // 播放成功后后台缓存前128KB，供下次启动解锁audio用
+  setTimeout(() => _saveAudioCache(url), 3000);
   const pp = audio.play();
   if (pp) pp.catch(err => {
     if (err?.name === 'AbortError') {
@@ -1780,7 +1827,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v5</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v6</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
