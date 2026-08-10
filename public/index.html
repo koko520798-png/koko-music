@@ -59,14 +59,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .song-name{font-size:12px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .song-artist{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 /* 各档位 */
-.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-130px) scale(.52);opacity:.38;z-index:1}
-.cover-item.far-next{transform:translate(-50%,-50%) translateX(130px) scale(.52);opacity:.38;z-index:1}
-.cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:150px;height:auto;padding:7px 7px 36px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.12)}
-.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px}
-.cover-item.prev{transform:translate(-50%,-50%) translateX(-80px) scale(.70);opacity:.68;z-index:2}
-.cover-item.next{transform:translate(-50%,-50%) translateX(80px) scale(.70);opacity:.68;z-index:2}
-.cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:150px;height:auto;padding:7px 7px 44px;border-radius:20px;box-shadow:0 5px 16px rgba(0,0,0,.15)}
-.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:136px;height:136px;border-radius:16px}
+/* far-prev/far-next：整体不透明(opacity在cover-item上去掉)，用cover-inner虚化图片，cover-wrap不透明背景遮挡后面的卡片 */
+.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-130px) scale(.52);z-index:1}
+.cover-item.far-next{transform:translate(-50%,-50%) translateX(130px) scale(.52);z-index:1}
+.cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:150px;height:auto;padding:7px 7px 36px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.12);background:rgb(252,232,237)}
+.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.45}
+/* prev/next：实一点，背景不透明，有层级感 */
+.cover-item.prev{transform:translate(-50%,-50%) translateX(-80px) scale(.70);z-index:2}
+.cover-item.next{transform:translate(-50%,-50%) translateX(80px) scale(.70);z-index:2}
+.cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:150px;height:auto;padding:7px 7px 44px;border-radius:20px;box-shadow:0 5px 16px rgba(0,0,0,.15);background:rgb(252,232,237)}
+.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.88}
 .cover-item.center{transform:translate(-50%,-50%) translateX(0) scale(1);opacity:1;z-index:5}
 .cover-item.center .cover-wrap{width:150px;height:auto;padding:7px 7px 14px;border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
 .cover-item.center .cover-inner{width:136px;height:136px;border-radius:16px}
@@ -209,6 +211,82 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 /* ====== 空状态 ====== */
 .empty{text-align:center;padding:48px 24px;color:var(--text2)}
 .empty-icon{font-size:48px;margin-bottom:12px}
+/* ====== 侧边栏 ====== */
+.sb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;opacity:0;pointer-events:none;transition:opacity .28s}
+.sb-overlay.open{opacity:1;pointer-events:all}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:80%;max-width:320px;background:var(--bg);z-index:401;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar.open{transform:translateX(0)}
+.sb-top{padding:calc(env(safe-area-inset-top,0) + 20px) 20px 16px;background:linear-gradient(160deg,rgba(242,168,192,.22) 0%,transparent 100%)}
+.sb-user-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sb-avatar{width:56px;height:56px;border-radius:50%;overflow:hidden;background:rgba(242,168,192,.3);flex-shrink:0;border:2px solid rgba(242,168,192,.5)}
+.sb-avatar img{width:100%;height:100%;object-fit:cover}
+.sb-user-info{flex:1;min-width:0}
+.sb-nickname{font-size:16px;font-weight:700;color:var(--text)}
+.sb-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.sb-top-icons{display:flex;gap:4px;margin-left:auto;flex-shrink:0}
+.sb-icon-btn{background:none;border:none;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.sb-icon-btn svg{width:20px;height:20px}
+.sb-icon-btn:active{background:rgba(0,0,0,.06)}
+.sb-divider{height:1px;background:var(--border);margin:0 20px}
+.sb-menu{list-style:none;padding:8px 0}
+.sb-item{display:flex;align-items:center;gap:16px;padding:14px 24px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.sb-item:active{background:rgba(224,112,144,.08)}
+.sb-item-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text)}
+.sb-item-icon svg{width:22px;height:22px}
+.sb-item-label{font-size:15px;color:var(--text)}
+/* ====== 定时关闭弹窗 ====== */
+.sleep-sheet{background:#1c1c1e;border-radius:16px 16px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0));width:100%;max-width:500px;color:#fff}
+.sleep-title{font-size:17px;font-weight:600;margin-bottom:16px}
+.sleep-card{background:#2c2c2e;border-radius:14px;padding:16px;margin-bottom:12px}
+.sleep-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sleep-row span{font-size:15px;font-weight:600}
+.sleep-toggle{width:44px;height:26px;border-radius:13px;border:none;cursor:pointer;position:relative;transition:background .2s;background:#3a3a3c;flex-shrink:0}
+.sleep-toggle.on{background:#e07090}
+.sleep-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.sleep-toggle.on::after{transform:translateX(18px)}
+.sleep-times{display:flex;gap:8px;flex-wrap:wrap}
+.sleep-time-btn{flex:1;min-width:44px;padding:10px 4px;border-radius:12px;border:none;background:#3a3a3c;color:#fff;font-size:15px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.sleep-time-btn.active{background:var(--pink-deep)}
+.sleep-custom-btn{width:100%;margin-top:10px;padding:11px;border-radius:12px;border:none;background:#3a3a3c;color:#fff;font-size:15px;cursor:pointer;text-align:center}
+.sleep-smart-desc{font-size:12px;color:#8e8e93;margin-top:6px}
+.sleep-finish-row{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 0}
+.sleep-finish-row input[type=radio]{accent-color:var(--pink-deep);width:18px;height:18px;cursor:pointer}
+.sleep-finish-row label{font-size:14px;color:#ebebf5;cursor:pointer}
+/* 定时关闭倒计时显示 */
+.sleep-countdown{font-size:12px;color:var(--pink-deep);margin-left:auto;font-weight:600}
+/* ====== 听歌识曲页 ====== */
+.shazam-page{position:fixed;inset:0;background:#fff;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transform:translateY(100%);transition:transform .3s}
+.shazam-page.open{transform:translateY(0)}
+.shazam-back{position:absolute;top:calc(env(safe-area-inset-top,0) + 12px);left:16px;background:none;border:none;color:#333;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.shazam-back svg{width:20px;height:20px}
+.shazam-ring{width:180px;height:180px;border-radius:50%;background:rgba(224,112,144,.15);display:flex;align-items:center;justify-content:center}
+.shazam-btn{width:120px;height:120px;border-radius:50%;background:var(--pink-deep);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.shazam-btn svg{width:48px;height:48px;color:#fff}
+.shazam-title{font-size:20px;font-weight:700;color:#333}
+.shazam-sub{font-size:14px;color:#888}
+.shazam-tabs{display:flex;gap:8px;position:absolute;bottom:calc(env(safe-area-inset-bottom,0) + 20px)}
+.shazam-tab{padding:10px 28px;border-radius:999px;border:1px solid #ddd;background:#fff;font-size:14px;cursor:pointer;color:#333}
+.shazam-tab.active{background:#333;color:#fff;border-color:#333}
+/* ====== 最近播放抽屉 ====== */
+.recent-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:16px 0 calc(16px + env(safe-area-inset-bottom,0));width:100%;max-width:500px;max-height:70vh;overflow-y:auto}
+.recent-header{padding:0 20px 12px;display:flex;align-items:center;justify-content:space-between}
+.recent-header h3{font-size:16px;font-weight:700}
+.recent-clear{font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer}
+.recent-item{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.recent-item:active{background:rgba(0,0,0,.04)}
+.recent-cover{width:40px;height:40px;border-radius:8px;overflow:hidden;background:rgba(242,168,192,.3);flex-shrink:0}
+.recent-cover img{width:100%;height:100%;object-fit:cover}
+.recent-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recent-artist{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ====== 装扮中心弹窗 ====== */
+.dress-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px 0 calc(20px + env(safe-area-inset-bottom,0));width:100%;max-width:500px}
+.dress-header{padding:0 20px 16px;font-size:16px;font-weight:700}
+.dress-section{padding:0 20px 16px}
+.dress-section-title{font-size:13px;color:var(--text2);margin-bottom:10px}
+.dress-avatar-row{display:flex;align-items:center;gap:16px}
+.dress-avatar-cur{width:64px;height:64px;border-radius:50%;overflow:hidden;background:rgba(242,168,192,.3);border:2px solid rgba(242,168,192,.5)}
+.dress-avatar-cur img{width:100%;height:100%;object-fit:cover}
+.dress-change-btn{padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:none;font-size:13px;color:var(--text);cursor:pointer}
 </style>
 </head>
 <body>
@@ -223,7 +301,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         <svg id="tncModeIcon" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
       </div>
       <!-- 右：空心设置图标（和自建家一样的stroke gear） -->
-      <button class="tnc-btn tnc-settings" onclick="showToast('设置敬请期待')">
+      <button class="tnc-btn tnc-settings" onclick="openSidebar()">
         <svg viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -797,6 +875,22 @@ function seekTo(e) {
   const pct = e.offsetX / bar.offsetWidth;
   audio.currentTime = pct * (audio.duration || 0);
 }
+// 进度条 touch 拖拽
+(function() {
+  let dragging = false;
+  function applySeek(clientX) {
+    const bar = document.getElementById('progressBar');
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = pct * (audio.duration || 0);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.getElementById('progressBar');
+    bar.addEventListener('touchstart', e => { dragging = true; applySeek(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+    bar.addEventListener('touchmove', e => { if (dragging) { applySeek(e.touches[0].clientX); e.preventDefault(); } }, { passive: false });
+    bar.addEventListener('touchend', () => { dragging = false; });
+  });
+})();
 
 function togglePlay() {
   if (audio.paused) { if (!audio.src) playCur(); else audio.play(); isPlaying=true; setPlayIcon(true); }
@@ -1240,6 +1334,287 @@ async function loadPlaylist(id, name) {
   } catch(e) { showToast('加载失败'); }
 }
 
+// ====== 侧边栏 ======
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sbOverlay').classList.add('open');
+  // 填充用户信息
+  const av = document.getElementById('sbAvatar');
+  const nick = document.getElementById('sbNickname');
+  const sub = document.getElementById('sbSub');
+  const localAv = localStorage.getItem('koko_custom_avatar');
+  if (localAv) { av.src = localAv; av.style.display = ''; }
+  else if (userInfo?.avatarUrl) { av.src = userInfo.avatarUrl + '?param=200y200'; av.style.display = ''; }
+  if (userInfo?.nickname) nick.textContent = userInfo.nickname;
+  if (userInfo?.userId) sub.textContent = 'UID · ' + userInfo.userId;
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('open');
+}
+// 左划打开侧边栏
+(function() {
+  let startX = 0, startY = 0, tracking = false;
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = startX < 30;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!tracking) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    if (dx > 60 && dy < 60) openSidebar();
+    tracking = false;
+  }, { passive: true });
+})();
+
+// 我的消息：在自建家里通过 postMessage 跳转
+function openMessages() {
+  closeSidebar();
+  if (window.parent !== window) {
+    window.parent.postMessage({ action: 'openChat' }, '*');
+  } else {
+    showToast('仅在小克小猫的家里可用');
+  }
+}
+
+// ====== 定时关闭 ======
+let _sleepTimer = null, _sleepEndTime = null, _sleepMin = null, _sleepFinish = false;
+let _sleepCountdownInterval = null;
+
+function openSleepSheet() {
+  closeSidebar();
+  const modal = document.getElementById('sleepModal');
+  modal.classList.remove('hidden');
+  // 同步按钮状态
+  updateSleepUI();
+}
+function closeSleepModal() { document.getElementById('sleepModal').classList.add('hidden'); }
+function updateSleepUI() {
+  const tog = document.getElementById('sleepToggle');
+  const btns = document.querySelectorAll('.sleep-time-btn');
+  if (_sleepTimer) {
+    tog.classList.add('on');
+    btns.forEach(b => b.classList.toggle('active', parseInt(b.textContent) === _sleepMin));
+  } else {
+    tog.classList.remove('on');
+    btns.forEach(b => b.classList.remove('active'));
+  }
+}
+function setSleepMin(min) {
+  _sleepMin = min;
+  if (_sleepTimer) clearTimeout(_sleepTimer);
+  if (_sleepCountdownInterval) clearInterval(_sleepCountdownInterval);
+  _sleepEndTime = Date.now() + min * 60000;
+  _sleepTimer = setTimeout(() => {
+    if (document.getElementById('sleepFinish').checked) {
+      audio.addEventListener('ended', () => { audio.pause(); isPlaying=false; setPlayIcon(false); }, { once: true });
+    } else {
+      audio.pause(); isPlaying=false; setPlayIcon(false);
+    }
+    _sleepTimer = null; _sleepMin = null; _sleepEndTime = null;
+    updateSleepCountdownLabel();
+  }, min * 60000);
+  _sleepCountdownInterval = setInterval(updateSleepCountdownLabel, 1000);
+  updateSleepUI();
+  updateSleepCountdownLabel();
+  showToast(`定时 ${min} 分钟后停止`);
+}
+function toggleSleepTimer() {
+  if (_sleepTimer) {
+    clearTimeout(_sleepTimer); clearInterval(_sleepCountdownInterval);
+    _sleepTimer=null; _sleepMin=null; _sleepEndTime=null;
+    updateSleepUI(); updateSleepCountdownLabel();
+    showToast('已取消定时');
+  } else if (_sleepMin) {
+    setSleepMin(_sleepMin);
+  } else {
+    setSleepMin(30);
+  }
+}
+function customSleepMin() {
+  const v = prompt('输入分钟数（1-240）');
+  const n = parseInt(v);
+  if (n > 0 && n <= 240) setSleepMin(n);
+}
+function updateSleepCountdownLabel() {
+  const el = document.getElementById('sleepCountdownLabel');
+  if (!el) return;
+  if (!_sleepTimer || !_sleepEndTime) { el.textContent = ''; return; }
+  const left = Math.max(0, Math.ceil((_sleepEndTime - Date.now()) / 1000));
+  const m = Math.floor(left / 60), s = left % 60;
+  el.textContent = ` · ${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ====== 最近播放 ======
+// playHistory 已有（在播放相关代码里），这里展示
+function openRecentSheet() {
+  closeSidebar();
+  const modal = document.getElementById('recentModal');
+  modal.classList.remove('hidden');
+  renderRecentList();
+}
+function closeRecentModal() { document.getElementById('recentModal').classList.add('hidden'); }
+function renderRecentList() {
+  const ul = document.getElementById('recentList');
+  // 去重，倒序（最近的在前）
+  const seen = new Set();
+  const items = [];
+  for (let i = playHistory.length - 1; i >= 0; i--) {
+    const idx = playHistory[i];
+    const song = playlist[idx];
+    if (song && !seen.has(song.id)) { seen.add(song.id); items.push({ song, idx }); }
+    if (items.length >= 50) break;
+  }
+  if (!items.length) { ul.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none">还没有播放记录</li>'; return; }
+  ul.innerHTML = items.map(({ song, idx }) => `
+    <li class="recent-item" onclick="playSongAt(${idx});closeRecentModal()">
+      <div class="recent-cover">${song.cover ? `<img src="${song.cover}?param=100y100">` : ''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="recent-name">${song.name || '-'}</div>
+        <div class="recent-artist">${song.artist || '-'}</div>
+      </div>
+    </li>`).join('');
+}
+function clearRecentPlayed() { playHistory = []; renderRecentList(); showToast('已清空'); }
+
+// ====== 装扮中心 ======
+function openDressSheet() {
+  closeSidebar();
+  document.getElementById('dressModal').classList.remove('hidden');
+  // 同步头像预览
+  const localAv = localStorage.getItem('koko_custom_avatar');
+  const img = document.getElementById('dressAvatarImg');
+  if (localAv) img.src = localAv;
+  else if (userInfo?.avatarUrl) img.src = userInfo.avatarUrl + '?param=200y200';
+  else img.src = '';
+}
+function closeDressModal() { document.getElementById('dressModal').classList.add('hidden'); }
+function handleAvatarUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    localStorage.setItem('koko_custom_avatar', b64);
+    document.getElementById('dressAvatarImg').src = b64;
+    document.getElementById('sbAvatar').src = b64;
+    showToast('头像已更新');
+  };
+  reader.readAsDataURL(file);
+}
+function resetToNeteaseAvatar() {
+  localStorage.removeItem('koko_custom_avatar');
+  const url = userInfo?.avatarUrl ? userInfo.avatarUrl + '?param=200y200' : '';
+  document.getElementById('dressAvatarImg').src = url;
+  document.getElementById('sbAvatar').src = url;
+  showToast('已同步网易云头像');
+}
+function handleWallpaperUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { setWallpaper(e.target.result); };
+  reader.readAsDataURL(file);
+}
+function setWallpaper(url) {
+  if (url) {
+    localStorage.setItem('koko_wallpaper', url);
+    document.body.style.backgroundImage = `url(${url})`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+  } else {
+    localStorage.removeItem('koko_wallpaper');
+    document.body.style.backgroundImage = '';
+  }
+  showToast(url ? '壁纸已设置' : '已恢复默认');
+}
+// 初始化壁纸
+(function() {
+  const wp = localStorage.getItem('koko_wallpaper');
+  if (wp) setWallpaper(wp);
+})();
+
+// ====== 听歌识曲 ======
+let _shazamMode = 'listen', _shazamRecorder = null, _shazamChunks = [], _shazamRecording = false;
+function openShazam() {
+  closeSidebar();
+  document.getElementById('shazamPage').classList.add('open');
+  resetShazam();
+}
+function closeShazam() {
+  document.getElementById('shazamPage').classList.remove('open');
+  if (_shazamRecorder && _shazamRecording) { _shazamRecorder.stop(); _shazamRecording = false; }
+}
+function setShazamMode(mode) {
+  _shazamMode = mode;
+  document.getElementById('shazamTabListen').classList.toggle('active', mode === 'listen');
+  document.getElementById('shazamTabHum').classList.toggle('active', mode === 'hum');
+  resetShazam();
+}
+function resetShazam() {
+  document.getElementById('shazamTitle').textContent = _shazamMode === 'listen' ? '点击识别歌曲' : '点击哼唱识曲';
+  document.getElementById('shazamSub').textContent = _shazamMode === 'listen' ? '对着手机播放音乐' : '哼唱几秒钟旋律';
+  document.getElementById('shazamBtn').style.background = 'var(--pink-deep)';
+  _shazamRecording = false;
+}
+async function toggleShazam() {
+  if (_shazamRecording) {
+    // 停止录音
+    if (_shazamRecorder) _shazamRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _shazamChunks = [];
+    _shazamRecorder = new MediaRecorder(stream);
+    _shazamRecorder.ondataavailable = e => { if (e.data.size) _shazamChunks.push(e.data); };
+    _shazamRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      _shazamRecording = false;
+      document.getElementById('shazamBtn').style.background = 'var(--pink-deep)';
+      document.getElementById('shazamTitle').textContent = '识别中…';
+      document.getElementById('shazamSub').textContent = '';
+      const blob = new Blob(_shazamChunks, { type: 'audio/webm' });
+      // 转base64发给VPS
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const b64 = ev.target.result.split(',')[1];
+        try {
+          const d = await api('/song/recognize', { audio: b64 });
+          const song = d.data?.songs?.[0];
+          if (song) {
+            document.getElementById('shazamTitle').textContent = song.name || '已识别';
+            document.getElementById('shazamSub').textContent = (song.artists||[]).map(a=>a.name).join('/');
+            // 加入播放列表
+            const s = { id: song.id, name: song.name, artist: (song.artists||[]).map(a=>a.name).join('/'), cover: song.album?.blurPicUrl||song.album?.picUrl||'' };
+            if (!playlist.find(p => p.id === s.id)) { playlist.push(s); savePlaylist(); }
+            curIdx = playlist.findIndex(p => p.id === s.id);
+            playCur();
+            setTimeout(() => closeShazam(), 1500);
+          } else {
+            document.getElementById('shazamTitle').textContent = '未识别到歌曲';
+            document.getElementById('shazamSub').textContent = '再试一次？';
+          }
+        } catch(e) { document.getElementById('shazamTitle').textContent = '识别失败'; document.getElementById('shazamSub').textContent = e.message||''; }
+      };
+      reader.readAsDataURL(blob);
+    };
+    _shazamRecorder.start();
+    _shazamRecording = true;
+    document.getElementById('shazamBtn').style.background = '#e05';
+    document.getElementById('shazamTitle').textContent = '录音中…';
+    document.getElementById('shazamSub').textContent = '点击停止';
+    // 10秒后自动停止
+    setTimeout(() => { if (_shazamRecording && _shazamRecorder) _shazamRecorder.stop(); }, 10000);
+  } catch(e) {
+    document.getElementById('shazamTitle').textContent = '无法访问麦克风';
+    document.getElementById('shazamSub').textContent = '请允许麦克风权限';
+  }
+}
+
 // ====== Toast ======
 function showToast(msg) {
   let t = document.getElementById('toast');
@@ -1287,5 +1662,198 @@ window.addEventListener('DOMContentLoaded', () => {
   }, { once: true, passive: true });
 });
 </script>
+<!-- ====== 侧边栏遮罩 + 侧边栏 ====== -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-user-row">
+      <div class="sb-avatar" onclick="openDressSheet()">
+        <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="sb-user-info">
+        <div class="sb-nickname" id="sbNickname">koko_kai</div>
+        <div class="sb-sub" id="sbSub"></div>
+      </div>
+      <div class="sb-top-icons">
+        <!-- 麦克风（听歌识曲） -->
+        <button class="sb-icon-btn" onclick="openShazam()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 11a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
+          </svg>
+        </button>
+        <!-- 扫码 -->
+        <button class="sb-icon-btn" onclick="openLogin()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+            <rect x="7" y="7" width="4" height="4" rx=".5"/><rect x="13" y="7" width="4" height="4" rx=".5"/>
+            <rect x="7" y="13" width="4" height="4" rx=".5"/>
+            <path d="M13 13h1v1h-1z"/><path d="M15 15h2v2h-2z"/><path d="M13 17h1v1h-1z"/><path d="M17 13h1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="sb-divider"></div>
+  <ul class="sb-menu">
+    <!-- 我的消息 -->
+    <li class="sb-item" onclick="openMessages()">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <polyline points="2,4 12,13 22,4"/>
+        </svg>
+      </span>
+      <span class="sb-item-label">我的消息</span>
+    </li>
+    <!-- 装扮中心 -->
+    <li class="sb-item" onclick="openDressSheet()">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.86H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.86l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+        </svg>
+      </span>
+      <span class="sb-item-label">装扮中心</span>
+    </li>
+    <!-- 创作者中心 -->
+    <li class="sb-item" onclick="showToast('创作者中心开发中')">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3"/>
+          <path d="M12 11v2m0 4h.01"/>
+          <path d="M5.07 19a9 9 0 0 1 13.86 0"/>
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+      </span>
+      <span class="sb-item-label">创作者中心</span>
+    </li>
+    <!-- 最近播放 -->
+    <li class="sb-item" onclick="openRecentSheet()">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <polyline points="12 7 12 12 15 15"/>
+        </svg>
+      </span>
+      <span class="sb-item-label">最近播放</span>
+    </li>
+    <!-- 定时关闭 -->
+    <li class="sb-item" onclick="openSleepSheet()">
+      <span class="sb-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="8"/>
+          <polyline points="12 9 12 13 14.5 15.5"/>
+          <path d="M5 3 2 6"/><path d="M19 3l3 3"/>
+        </svg>
+      </span>
+      <span class="sb-item-label">定时关闭<span class="sleep-countdown" id="sleepCountdownLabel"></span></span>
+    </li>
+  </ul>
+</div>
+
+<!-- ====== 听歌识曲页 ====== -->
+<div class="shazam-page" id="shazamPage">
+  <button class="shazam-back" onclick="closeShazam()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    听歌识曲
+  </button>
+  <div class="shazam-ring">
+    <button class="shazam-btn" id="shazamBtn" onclick="toggleShazam()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 11a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="18" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </button>
+  </div>
+  <div class="shazam-title" id="shazamTitle">点击识别歌曲</div>
+  <div class="shazam-sub" id="shazamSub">听歌 · 哼唱都可以</div>
+  <div class="shazam-tabs">
+    <button class="shazam-tab active" id="shazamTabListen" onclick="setShazamMode('listen')">听歌识曲</button>
+    <button class="shazam-tab" id="shazamTabHum" onclick="setShazamMode('hum')">哼唱识曲</button>
+  </div>
+</div>
+
+<!-- ====== 定时关闭弹窗 ====== -->
+<div class="modal-overlay hidden" id="sleepModal" onclick="e=>e.stopPropagation()">
+  <div class="sleep-sheet" onclick="event.stopPropagation()">
+    <div class="sleep-title">定时关闭</div>
+    <div class="sleep-card">
+      <div class="sleep-row">
+        <span>选择时间</span>
+        <button class="sleep-toggle" id="sleepToggle" onclick="toggleSleepTimer()"></button>
+      </div>
+      <div class="sleep-times" id="sleepTimeBtns">
+        <button class="sleep-time-btn" onclick="setSleepMin(10)">10</button>
+        <button class="sleep-time-btn" onclick="setSleepMin(20)">20</button>
+        <button class="sleep-time-btn" onclick="setSleepMin(30)">30</button>
+        <button class="sleep-time-btn" onclick="setSleepMin(45)">45</button>
+        <button class="sleep-time-btn" onclick="setSleepMin(60)">60</button>
+        <button class="sleep-time-btn" onclick="setSleepMin(90)">90</button>
+      </div>
+      <button class="sleep-custom-btn" onclick="customSleepMin()">自定义</button>
+    </div>
+    <div class="sleep-card">
+      <div class="sleep-row">
+        <span>智能关闭</span>
+        <button class="sleep-toggle" style="background:#3a3a3c" disabled></button>
+      </div>
+      <div class="sleep-smart-desc">根据睡眠状况动态调整定时</div>
+    </div>
+    <div class="sleep-finish-row">
+      <input type="radio" id="sleepFinish" name="sleepMode">
+      <label for="sleepFinish">播完整首歌再停止播放</label>
+    </div>
+    <button class="sleep-custom-btn" onclick="closeSleepModal()" style="margin-top:16px;background:#444">关闭</button>
+  </div>
+</div>
+
+<!-- ====== 最近播放抽屉 ====== -->
+<div class="modal-overlay hidden" id="recentModal" onclick="closeRecentModal()">
+  <div class="recent-sheet" onclick="event.stopPropagation()">
+    <div class="recent-header">
+      <h3>最近播放</h3>
+      <button class="recent-clear" onclick="clearRecentPlayed()">清空</button>
+    </div>
+    <ul id="recentList"></ul>
+  </div>
+</div>
+
+<!-- ====== 装扮中心抽屉 ====== -->
+<div class="modal-overlay hidden" id="dressModal" onclick="closeDressModal()">
+  <div class="dress-sheet" onclick="event.stopPropagation()">
+    <div class="dress-header">装扮中心</div>
+    <div class="dress-section">
+      <div class="dress-section-title">头像</div>
+      <div class="dress-avatar-row">
+        <div class="dress-avatar-cur" id="dressAvatarPreview">
+          <img id="dressAvatarImg" src="" alt="">
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:8px">头像与网易云账号同步</div>
+          <button class="dress-change-btn" onclick="document.getElementById('avatarInput').click()">上传本地头像</button>
+          <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+          <button class="dress-change-btn" style="margin-top:8px" onclick="resetToNeteaseAvatar()">同步网易云头像</button>
+        </div>
+      </div>
+    </div>
+    <div class="sb-divider" style="margin:0 20px 16px"></div>
+    <div class="dress-section">
+      <div class="dress-section-title">主题壁纸</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="setWallpaper(null)" style="padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);font-size:13px;cursor:pointer">默认（无壁纸）</button>
+        <button onclick="document.getElementById('wallpaperInput').click()" style="padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:none;font-size:13px;cursor:pointer">上传图片</button>
+        <input type="file" id="wallpaperInput" accept="image/*" style="display:none" onchange="handleWallpaperUpload(this)">
+      </div>
+    </div>
+    <div class="dress-section" style="padding-top:0">
+      <button onclick="closeDressModal()" style="width:100%;padding:12px;border-radius:24px;border:1px solid var(--border);background:none;font-size:15px;color:var(--text2);cursor:pointer">完成</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
