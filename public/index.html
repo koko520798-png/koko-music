@@ -670,7 +670,8 @@ function parseLyric(raw) {
 let _rafId = null;
 let _lastActive = -1; // 上一次高亮的歌词行下标，避免无变化时重绘DOM
 
-const LYRIC_OFFSET = 0.4; // 歌词提前量（秒），补偿网易云时间戳偏差
+const LYRIC_OFFSET = 0.4; // 行切换提前量（秒）
+const WORD_OFFSET = 0.8;  // 逐字高亮提前量（秒，比行切换更大）
 
 function _rafTick() {
   const cur = audio.currentTime, dur = audio.duration || 1;
@@ -707,8 +708,9 @@ function _rafTick() {
         if (spans.length !== line.words.length) {
           curEl.innerHTML = line.words.map(w => `<span>${w.text}</span>`).join('');
         }
+        const wordCur = cur + WORD_OFFSET;
         curEl.querySelectorAll('span').forEach((sp, i) => {
-          const lit = lyricCur >= line.words[i].start;
+          const lit = wordCur >= line.words[i].start;
           if (lit !== sp.classList.contains('lit')) sp.classList.toggle('lit', lit);
         });
       } else if (line) {
