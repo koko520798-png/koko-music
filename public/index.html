@@ -596,6 +596,10 @@ window.addEventListener('message', function(e) {
       try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
     }
   }
+  // 家里发来壁纸，直接应用（跟随家里，不存到本地，下次打开家里会再发一次）
+  if (e.data.action === 'setWallpaper') {
+    _applyWallpaper(e.data.dataUrl || null);
+  }
 });
 
 // 启动时：通知家里"我准备好了"，请求家里发cookie过来；同时把自己已有的cookie也发给家里存
@@ -1859,7 +1863,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v11</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v12</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
