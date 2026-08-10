@@ -1655,51 +1655,14 @@ function resetToNeteaseAvatar() {
   document.getElementById('sbAvatar').src = url;
   showToast('已同步网易云头像');
 }
-// ====== 壁纸 IndexedDB（不受 localStorage 5MB 限制）======
-function _wpDB() {
-  return new Promise((res, rej) => {
-    const req = indexedDB.open('koko_wp', 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore('wp');
-    req.onsuccess = e => res(e.target.result);
-    req.onerror = () => rej(req.error);
-  });
+// ====== 壁纸 localStorage（参考家里聊天界面，简单可靠）======
+function _wpSave(dataUrl) {
+  try { localStorage.setItem('koko_wallpaper', dataUrl); } catch(e) {}
 }
-async function _wpSave(dataUrl) {
-  try {
-    const db = await _wpDB();
-    await new Promise((res, rej) => {
-      const tx = db.transaction('wp', 'readwrite');
-      tx.objectStore('wp').put(dataUrl, 'cur');
-      tx.oncomplete = res; tx.onerror = rej;
-    });
-  } catch(e) { try { localStorage.setItem('koko_wallpaper', dataUrl); } catch(e2) {} }
+function _wpLoad() {
+  return localStorage.getItem('koko_wallpaper') || null;
 }
-async function _wpLoad() {
-  try {
-    const db = await _wpDB();
-    const idbData = await new Promise(res => {
-      const tx = db.transaction('wp', 'readonly');
-      const req = tx.objectStore('wp').get('cur');
-      req.onsuccess = () => res(req.result || null);
-      req.onerror = () => res(null);
-    });
-    if (idbData) return idbData;
-    // IndexedDB 没有，尝试从旧 localStorage 迁移
-    const lsData = localStorage.getItem('koko_wallpaper');
-    if (lsData) {
-      await _wpSave(lsData); // 迁移到 IndexedDB
-      localStorage.removeItem('koko_wallpaper');
-      return lsData;
-    }
-    return null;
-  } catch(e) { return localStorage.getItem('koko_wallpaper'); }
-}
-async function _wpDel() {
-  try {
-    const db = await _wpDB();
-    const tx = db.transaction('wp', 'readwrite');
-    tx.objectStore('wp').delete('cur');
-  } catch(e) {}
+function _wpDel() {
   try { localStorage.removeItem('koko_wallpaper'); } catch(e) {}
 }
 function _applyWallpaper(url) {
@@ -1721,39 +1684,40 @@ function handleWallpaperUpload(input) {
     // 先本地应用（即时生效）
     _applyWallpaper(dataUrl);
     showToast('壁纸设置中…');
-    // 压缩后存到本地IndexedDB + 上传到服务器（压缩后约几十KB，不超body限制）
-    const compressed = await compressImage(dataUrl, 800, 0.72);
-    await _wpSave(compressed);
-    await cloudSaveWallpaper(compressed);
+    // 压缩（参考家里：1080px / q0.78），存到localStorage + 服务器备份
+    const compressed = await compressImage(dataUrl, 1080, 0.78);
+    _wpSave(compressed);
+    cloudSaveWallpaper(compressed); // 后台备份到服务器，不阻塞
     showToast('壁纸已设置');
   };
   reader.readAsDataURL(file);
 }
-async function setWallpaper(url) {
+function setWallpaper(url) {
   if (url) {
-    await _wpSave(url);
+    _wpSave(url);
     _applyWallpaper(url);
     showToast('壁纸已设置');
   } else {
-    await _wpDel();
+    _wpDel();
     cloudDeleteWallpaper();
     _applyWallpaper(null);
     showToast('已恢复默认');
   }
 }
-// 初始化壁纸（静默恢复，不弹 toast）
-// 优先IndexedDB（快），没有就从服务器读dataURL（iOS清了本地的时候救回来）
-(async function() {
-  const localWp = await _wpLoad();
+// 初始化壁纸（同步读localStorage，即时恢复）
+// iOS清了localStorage时从服务器备份恢复
+(function() {
+  const localWp = _wpLoad();
   if (localWp) {
     _applyWallpaper(localWp);
   } else {
-    // 本地没有，从服务器读（现在直接存的dataURL，不是远程URL）
-    const cloudData = await cloudLoadWallpaper();
-    if (cloudData) {
-      _applyWallpaper(cloudData);
-      await _wpSave(cloudData); // 存回IndexedDB备用
-    }
+    // 本地没有，从服务器恢复
+    cloudLoadWallpaper().then(cloudData => {
+      if (cloudData) {
+        _applyWallpaper(cloudData);
+        _wpSave(cloudData); // 存回localStorage
+      }
+    });
   }
 })();
 
@@ -1886,7 +1850,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v9</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v10</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
