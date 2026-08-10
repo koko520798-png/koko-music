@@ -1773,7 +1773,8 @@ window.addEventListener('DOMContentLoaded', () => {
 <!-- ====== 侧边栏遮罩 + 侧边栏 ====== -->
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
-  <div class="sb-top">
+  <div class="sb-top" style="position:relative">
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v4</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
