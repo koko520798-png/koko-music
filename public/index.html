@@ -632,6 +632,12 @@ async function _prefetchUrl(songId) {
     const url = d.data?.[0]?.url;
     if (url) {
       _urlCache[songId] = url;
+      // 如果是当前歌且 audio 没在播放，预设 src（不 play）
+      // 这样用户点播放时直接在手势里 play()，不需要 async，iOS 拦不住
+      if (!isPlaying && !_pendingPlay && playlist[curIdx]?.id === songId) {
+        audio.src = url;
+        audio.preload = 'none';
+      }
       // 如果用户在等这首歌（手势里已激活过audio），自动触发播放
       if (_pendingPlay === songId) {
         _pendingPlay = null;
@@ -663,7 +669,7 @@ function schedulePrefetch() {
 function _doPlay(url, songId) {
   // 同步执行：设 src 并立即 play（必须在手势上下文里或已有缓存URL时调用）
   audio.muted = false;
-  audio.src = url;
+  if (audio.src !== url) audio.src = url; // src 没变就不重设，避免触发 abort
   const pp = audio.play();
   if (pp) pp.catch(err => {
     if (err?.name === 'AbortError') {
@@ -1774,7 +1780,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v4</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v5</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
