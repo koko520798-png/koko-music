@@ -511,24 +511,41 @@ async function cloudLoadPlaylist() {
   } catch(e) { return []; }
 }
 
-async function cloudSaveWallpaper(dataUrl, mime) {
+async function cloudSaveWallpaper(dataUrl) {
   try {
-    const r = await fetch(CLOUD_API + '&type=wallpaper', {
+    await fetch(CLOUD_API + '&type=wallpaper', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: dataUrl, mime: mime || 'image/jpeg' }),
+      body: JSON.stringify({ data: dataUrl }),
     });
-    const j = await r.json();
-    return j.url || null; // 服务器上的壁纸URL
-  } catch(e) { return null; }
+  } catch(e) {}
 }
 
-async function cloudLoadWallpaperUrl() {
+async function cloudLoadWallpaper() {
+  // 直接返回存在 Redis 里的 dataURL（不是远程URL）
   try {
     const r = await fetch(CLOUD_API + '&type=wallpaper');
     const j = await r.json();
-    return j.url || null;
+    return j.url || null; // url 字段现在存的是 dataURL
   } catch(e) { return null; }
+}
+
+// 压缩图片再上传，避免超过服务器 body 大小限制
+async function compressImage(dataUrl, maxWidth, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 }
 
 async function cloudDeleteWallpaper() {
@@ -545,6 +562,10 @@ let userInfo = JSON.parse(localStorage.getItem('nease_user') || 'null');
 // 页面加载后立即预取当前歌曲URL（这样用户点播放时已有缓存，直接在手势上下文里play）
 setTimeout(() => schedulePrefetch(), 0);
 
+// 如果playlist非空（localStorage有数据），主动同步到服务器（保证服务器有最新数据）
+if (playlist.length) {
+  cloudSavePlaylist(playlist); // 后台静默同步，不阻塞UI
+}
 // 如果playlist为空，异步从服务器恢复（iOS清了localStorage时救回来）
 if (!playlist.length) {
   cloudLoadPlaylist().then(pl => {
@@ -1697,17 +1718,13 @@ function handleWallpaperUpload(input) {
   const reader = new FileReader();
   reader.onload = async e => {
     const dataUrl = e.target.result;
-    const mime = file.type || 'image/jpeg';
     // 先本地应用（即时生效）
     _applyWallpaper(dataUrl);
     showToast('壁纸设置中…');
-    // 同时存本地IndexedDB（快速恢复）+ 上传到服务器（持久化）
-    await _wpSave(dataUrl);
-    const cloudUrl = await cloudSaveWallpaper(dataUrl, mime);
-    if (cloudUrl) {
-      // 存服务器URL到IndexedDB（下次优先用服务器URL，节省本地空间）
-      await _wpSave(cloudUrl);
-    }
+    // 压缩后存到本地IndexedDB + 上传到服务器（压缩后约几十KB，不超body限制）
+    const compressed = await compressImage(dataUrl, 800, 0.72);
+    await _wpSave(compressed);
+    await cloudSaveWallpaper(compressed);
     showToast('壁纸已设置');
   };
   reader.readAsDataURL(file);
@@ -1725,17 +1742,17 @@ async function setWallpaper(url) {
   }
 }
 // 初始化壁纸（静默恢复，不弹 toast）
-// 优先IndexedDB（快），没有就从服务器URL拉（iOS清了本地的时候救回来）
+// 优先IndexedDB（快），没有就从服务器读dataURL（iOS清了本地的时候救回来）
 (async function() {
   const localWp = await _wpLoad();
   if (localWp) {
     _applyWallpaper(localWp);
   } else {
-    // 本地没有，从服务器读URL
-    const cloudUrl = await cloudLoadWallpaperUrl();
-    if (cloudUrl) {
-      _applyWallpaper(cloudUrl);
-      await _wpSave(cloudUrl); // 存回IndexedDB备用
+    // 本地没有，从服务器读（现在直接存的dataURL，不是远程URL）
+    const cloudData = await cloudLoadWallpaper();
+    if (cloudData) {
+      _applyWallpaper(cloudData);
+      await _wpSave(cloudData); // 存回IndexedDB备用
     }
   }
 })();
@@ -1869,7 +1886,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v8</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v9</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
