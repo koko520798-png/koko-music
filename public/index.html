@@ -670,7 +670,7 @@ function parseLyric(raw) {
 let _rafId = null;
 let _lastActive = -1; // 上一次高亮的歌词行下标，避免无变化时重绘DOM
 
-const LYRIC_OFFSET = 0.2; // 歌词提前量（秒），补偿网易云时间戳偏差
+const LYRIC_OFFSET = 0.4; // 歌词提前量（秒），补偿网易云时间戳偏差
 
 function _rafTick() {
   const cur = audio.currentTime, dur = audio.duration || 1;
