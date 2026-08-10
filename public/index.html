@@ -74,8 +74,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .lyrics{text-align:center;padding:4px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;overflow:hidden}
 .lyric-line{font-size:11px;color:var(--text2);line-height:1.4;opacity:.35;transition:all .3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;filter:blur(.4px)}
 .lyric-line.active{opacity:1;font-weight:600;font-size:12px;line-height:1.4;filter:none}
-.lyric-line.active span{color:var(--text2);transition:color .1s ease}
-.lyric-line.active span.lit{color:var(--pink-deep)}
+.lyric-line.active span{
+  display:inline-block;
+  background-image:linear-gradient(to right,var(--pink-deep) var(--lit-pct,0%),var(--text2) var(--lit-pct,0%));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
 /* fallback渐变高亮（无yrc时用background-clip） */
 .lyric-line.active.grad-lyric{
   background-clip:text;-webkit-background-clip:text;
@@ -552,8 +556,9 @@ async function playCur() {
   const song = playlist[curIdx];
   updateSongUI(song);
   updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
-  // iOS PWA: await之前（手势同步上下文）先静音play激活audio
-  // 这样await后的play()不会被iOS autoplay policy拦截
+  // iOS PWA: await之前（手势同步上下文）用静音WAV先解锁audio
+  // 必须给src才能让play()成功激活（空src play()会因"无音源"失败不解锁）
+  audio.src = getSilentUrl();
   audio.muted = true;
   audio.play().catch(() => {});
   try {
@@ -593,6 +598,25 @@ function updateSongUI(song) {
   setInner('coverFarPrev', len > 1 ? at(curIdx-2)?.cover : null);
   setInner('coverFarNext', len > 1 ? at(curIdx+2)?.cover : null);
   document.title = (song.name || '音乐') + ' - 小克&小猫';
+  // iOS控制中心：让系统知道正在播放什么
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: song.name || '未知歌曲',
+      artist: song.artist || '未知歌手',
+      album: '',
+      artwork: song.cover
+        ? [{ src: song.cover + '?param=300y300', sizes: '300x300', type: 'image/jpeg' }]
+        : []
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', prevSong);
+    navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+    navigator.mediaSession.setActionHandler('play', () => {
+      audio.play(); isPlaying = true; setPlayIcon(true);
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audio.pause(); isPlaying = false; setPlayIcon(false);
+    });
+  }
   renderPlaylist();
 }
 
@@ -708,10 +732,14 @@ function _rafTick() {
         if (spans.length !== line.words.length) {
           curEl.innerHTML = line.words.map(w => `<span>${w.text}</span>`).join('');
         }
-        const wordCur = cur + WORD_OFFSET;
+        // 卡拉OK渐变：每个字用精确start/end时间计算填充百分比
         curEl.querySelectorAll('span').forEach((sp, i) => {
-          const lit = wordCur >= line.words[i].start;
-          if (lit !== sp.classList.contains('lit')) sp.classList.toggle('lit', lit);
+          const w = line.words[i];
+          let pct;
+          if (cur < w.start) pct = 0;
+          else if (cur >= w.end) pct = 100;
+          else pct = (cur - w.start) / (w.end - w.start) * 100;
+          sp.style.setProperty('--lit-pct', pct.toFixed(1) + '%');
         });
       } else if (line) {
         // fallback：CSS渐变模拟从左到右高亮
@@ -734,13 +762,30 @@ function _rafTick() {
 audio.addEventListener('play', () => {
   if (_rafId) cancelAnimationFrame(_rafId);
   _rafId = requestAnimationFrame(_rafTick);
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'playing';
+  }
 });
 audio.addEventListener('pause', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = 'paused';
+  }
 });
 audio.addEventListener('ended', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
   nextSong();
+});
+audio.addEventListener('durationchange', () => {
+  if ('mediaSession' in navigator && audio.duration && !isNaN(audio.duration)) {
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate,
+        position: audio.currentTime
+      });
+    } catch(e) {}
+  }
 });
 
 function fmt(s) {
