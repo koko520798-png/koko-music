@@ -552,11 +552,16 @@ async function playCur() {
   const song = playlist[curIdx];
   updateSongUI(song);
   updateFavIcon(); // 切歌时根据实际收藏状态更新爱心
+  // iOS PWA: await之前（手势同步上下文）先静音play激活audio
+  // 这样await后的play()不会被iOS autoplay policy拦截
+  audio.muted = true;
+  audio.play().catch(() => {});
   try {
     const d = await api('/song/url', { id: song.id, br: 128000 });
     const url = d.data?.[0]?.url;
-    if (!url) { showToast('此歌曲暂无版权'); nextSong(); return; }
+    if (!url) { audio.muted = false; showToast('此歌曲暂无版权'); nextSong(); return; }
     audio.src = url;
+    audio.muted = false;
     const playPromise = audio.play();
     if (playPromise) playPromise.catch((err) => {
       showToast('播放错误: ' + (err?.name || err));
@@ -567,7 +572,7 @@ async function playCur() {
     setPlayIcon(true);
     loadLyric(song.id);
     localStorage.setItem('nease_curIdx', curIdx);
-  } catch(e) { showToast('播放失败: ' + (e?.message || e)); }
+  } catch(e) { audio.muted = false; showToast('播放失败: ' + (e?.message || e)); }
 }
 
 function updateSongUI(song) {
