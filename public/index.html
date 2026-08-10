@@ -656,10 +656,21 @@ async function playCur() {
     audio.src = url;
     audio.muted = false;
     const playPromise = audio.play();
-    if (playPromise) playPromise.catch((err) => {
-      showToast('播放错误: ' + (err?.name || err));
-      isPlaying = false;
-      setPlayIcon(false);
+    if (playPromise) playPromise.catch(err => {
+      if (err?.name === 'AbortError') {
+        // 资源还在加载中，等 canplay 后重试一次
+        audio.addEventListener('canplay', function once() {
+          audio.removeEventListener('canplay', once);
+          audio.play().catch(e2 => {
+            showToast('播放失败: ' + (e2?.name || e2));
+            isPlaying = false; setPlayIcon(false);
+          });
+        }, { once: true });
+      } else {
+        showToast('播放错误: ' + (err?.name || err));
+        isPlaying = false;
+        setPlayIcon(false);
+      }
     });
     isPlaying = true;
     setPlayIcon(true);
@@ -1521,30 +1532,80 @@ function resetToNeteaseAvatar() {
   document.getElementById('sbAvatar').src = url;
   showToast('已同步网易云头像');
 }
-function handleWallpaperUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => { setWallpaper(e.target.result); };
-  reader.readAsDataURL(file);
+// ====== 壁纸 IndexedDB（不受 localStorage 5MB 限制）======
+function _wpDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('koko_wp', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('wp');
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = () => rej(req.error);
+  });
 }
-function setWallpaper(url) {
+async function _wpSave(dataUrl) {
+  try {
+    const db = await _wpDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction('wp', 'readwrite');
+      tx.objectStore('wp').put(dataUrl, 'cur');
+      tx.oncomplete = res; tx.onerror = rej;
+    });
+  } catch(e) { try { localStorage.setItem('koko_wallpaper', dataUrl); } catch(e2) {} }
+}
+async function _wpLoad() {
+  try {
+    const db = await _wpDB();
+    return await new Promise(res => {
+      const tx = db.transaction('wp', 'readonly');
+      const req = tx.objectStore('wp').get('cur');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => res(null);
+    });
+  } catch(e) { return localStorage.getItem('koko_wallpaper'); }
+}
+async function _wpDel() {
+  try {
+    const db = await _wpDB();
+    const tx = db.transaction('wp', 'readwrite');
+    tx.objectStore('wp').delete('cur');
+  } catch(e) {}
+  try { localStorage.removeItem('koko_wallpaper'); } catch(e) {}
+}
+function _applyWallpaper(url) {
   if (url) {
-    localStorage.setItem('koko_wallpaper', url);
     document.body.style.backgroundImage = `url(${url})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundAttachment = 'fixed';
   } else {
-    localStorage.removeItem('koko_wallpaper');
     document.body.style.backgroundImage = '';
   }
-  showToast(url ? '壁纸已设置' : '已恢复默认');
 }
-// 初始化壁纸
-(function() {
-  const wp = localStorage.getItem('koko_wallpaper');
-  if (wp) setWallpaper(wp);
+function handleWallpaperUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    await _wpSave(e.target.result);
+    _applyWallpaper(e.target.result);
+    showToast('壁纸已设置');
+  };
+  reader.readAsDataURL(file);
+}
+async function setWallpaper(url) {
+  if (url) {
+    await _wpSave(url);
+    _applyWallpaper(url);
+    showToast('壁纸已设置');
+  } else {
+    await _wpDel();
+    _applyWallpaper(null);
+    showToast('已恢复默认');
+  }
+}
+// 初始化壁纸（静默从 IndexedDB 恢复，不弹 toast）
+(async function() {
+  const wp = await _wpLoad();
+  if (wp) _applyWallpaper(wp);
 })();
 
 // ====== 听歌识曲 ======
