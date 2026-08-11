@@ -559,8 +559,8 @@ let playlist = JSON.parse(localStorage.getItem('nease_playlist') || '[]');
 let curIdx = parseInt(localStorage.getItem('nease_curIdx') || '0');
 let cookie = localStorage.getItem('nease_cookie') || '';
 let userInfo = JSON.parse(localStorage.getItem('nease_user') || 'null');
-// 页面加载后立即预取当前歌曲URL（这样用户点播放时已有缓存，直接在手势上下文里play）
-setTimeout(() => schedulePrefetch(), 0);
+// 页面加载后批量预取所有歌曲URL（最多20首），随机点哪首都有缓存
+setTimeout(() => prefetchAll(), 0);
 
 // 如果playlist非空（localStorage有数据），主动同步到服务器（保证服务器有最新数据）
 if (playlist.length) {
@@ -574,7 +574,7 @@ if (!playlist.length) {
       localStorage.setItem('nease_playlist', JSON.stringify(pl));
       renderPlaylist();
       updateSongUI(playlist[curIdx] || playlist[0]);
-      schedulePrefetch();
+      prefetchAll();
     }
   });
 }
@@ -755,6 +755,16 @@ function schedulePrefetch() {
   if (cur) _prefetchUrl(cur.id);
   const next = playlist[(curIdx + 1) % len];
   if (next && next.id !== cur?.id) _prefetchUrl(next.id);
+}
+
+// 批量预取歌单所有歌的URL（最多20首，防止歌单太长时请求过多）
+// 用于歌单加载完成时提前缓存，随机点歌不用等待
+function prefetchAll() {
+  if (!playlist.length) return;
+  const limit = Math.min(playlist.length, 20);
+  for (let i = 0; i < limit; i++) {
+    _prefetchUrl(playlist[i].id);
+  }
 }
 
 function _doPlay(url, songId) {
@@ -1873,7 +1883,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v14</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v15</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
