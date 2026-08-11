@@ -785,7 +785,7 @@ async function playCur() {
   updateSongUI(song);
   updateFavIcon();
 
-  // ① 优先使用预加载缓存（整段在手势同步上下文里，iOS 不会拦）
+  // ① 优先使用内存缓存（整段在手势同步上下文里，iOS 不会拦）
   const cached = _urlCache[song.id];
   if (cached) {
     delete _urlCache[song.id];
@@ -793,8 +793,15 @@ async function playCur() {
     return;
   }
 
+  // ① bis：audio.src 已经是真实 URL（schedulePrefetch 提前设置了）直接 play
+  const curSrc = audio.src;
+  const isUnlockOrEmpty = !curSrc || curSrc.includes('unlock.wav') || curSrc === location.origin + '/';
+  if (!isUnlockOrEmpty) {
+    _doPlay(curSrc, song.id);
+    return;
+  }
+
   // ② 没有缓存：在手势里激活 audio，然后等预取完成自动播放
-  // data URI 不会被 iOS revoke，激活必然成功
   audio.src = getSilentUrl();
   audio.muted = true;
   audio.play().catch(() => {}); // 激活 audio element（手势上下文里）
@@ -1863,7 +1870,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v12</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v13</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
