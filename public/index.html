@@ -490,6 +490,17 @@ function parseCookieForHeader(setCookieStr) {
     .join('; ');
 }
 
+// ====== 心动/koko 歌单本地缓存 ======
+function loadHeartCache() { try { return JSON.parse(localStorage.getItem('nease_heart_cache') || '[]'); } catch(e) { return []; } }
+function saveHeartCache(songs) { try { localStorage.setItem('nease_heart_cache', JSON.stringify(songs)); } catch(e) {} }
+function loadKokoCache() { try { return JSON.parse(localStorage.getItem('nease_koko_cache') || '[]'); } catch(e) { return []; } }
+function saveKokoCache(songs) { try { localStorage.setItem('nease_koko_cache', JSON.stringify(songs)); } catch(e) {} }
+// 合并多个歌单去重（以id为准）
+function mergeSongsUnique(...lists) {
+  const seen = new Set();
+  return lists.flat().filter(s => { if (seen.has(s.id)) return false; seen.add(s.id); return true; });
+}
+
 // ====== 云端数据同步（歌单 + 壁纸，绕开iOS本地存储被清的问题）======
 const CLOUD_API = 'https://screentime-tracker-mu.vercel.app/api/koko-data?key=xiaomao520';
 
@@ -566,17 +577,28 @@ setTimeout(() => prefetchAll(), 0);
 if (playlist.length) {
   cloudSavePlaylist(playlist); // 后台静默同步，不阻塞UI
 }
-// 如果playlist为空，异步从服务器恢复（iOS清了localStorage时救回来）
+// 如果playlist为空，先从本地 heart/koko 缓存恢复（0秒，立刻有歌）
 if (!playlist.length) {
-  cloudLoadPlaylist().then(pl => {
-    if (pl.length && !playlist.length) {
-      playlist = pl;
-      localStorage.setItem('nease_playlist', JSON.stringify(pl));
-      renderPlaylist();
-      updateSongUI(playlist[curIdx] || playlist[0]);
-      prefetchAll();
-    }
-  });
+  const merged = mergeSongsUnique(loadKokoCache(), loadHeartCache());
+  if (merged.length) {
+    playlist = merged;
+    curIdx = 0;
+    localStorage.setItem('nease_playlist', JSON.stringify(merged));
+    renderPlaylist();
+    updateSongUI(playlist[0]);
+    prefetchAll();
+  } else {
+    // 本地缓存也没有，从云端恢复（兜底）
+    cloudLoadPlaylist().then(pl => {
+      if (pl.length && !playlist.length) {
+        playlist = pl;
+        localStorage.setItem('nease_playlist', JSON.stringify(pl));
+        renderPlaylist();
+        updateSongUI(playlist[curIdx] || playlist[0]);
+        prefetchAll();
+      }
+    });
+  }
 }
 let isPlaying = false;
 let playMode = 1; // 0=循环 1=随机
@@ -1232,13 +1254,24 @@ function savePlaylist() {
 // ====== 播放 tab：心动/推荐/歌单 ======
 let currentPlayTab = 'heart';
 
+const _HEART_LOADER = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none"><div class="heart-loader" style="width:24px;height:24px;margin:0 auto"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></li>';
+
 async function switchPlayTab(tab) {
   currentPlayTab = tab;
   document.querySelectorAll('.play-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('ptab-' + tab).classList.add('active');
   updateTncTitle();
   const el = document.getElementById('playTabList');
-  el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none"><div class="heart-loader" style="width:24px;height:24px;margin:0 auto"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></li>';
+
+  // 有缓存先立刻显示，没有才显示 loading
+  let localCache = tab === 'heart' ? loadHeartCache() : tab === 'koko' ? loadKokoCache() : [];
+  if (localCache.length) {
+    window._tabSongs = localCache;
+    renderTabSongs(el);
+  } else {
+    el.innerHTML = _HEART_LOADER;
+  }
+
   try {
     let songs = [];
     if (tab === 'heart') {
@@ -1246,19 +1279,19 @@ async function switchPlayTab(tab) {
       if (!userInfo?.userId) await fetchUserInfo();
       const d = await api('/user/playlist', { uid: userInfo.userId, limit: 1 });
       const favId = d.playlist?.[0]?.id;
-      if (!favId) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none">找不到歌单</li>'; return; }
+      if (!favId) { if (!localCache.length) el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none">找不到歌单</li>'; return; }
       const d2 = await api('/playlist/track/all', { id: favId, limit: 100 });
       songs = (d2.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||'' }));
+      saveHeartCache(songs); // 存本地缓存
     } else if (tab === 'recommend') {
       if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看每日推荐</li>'; return; }
       if (window._prefetchedRecommend) {
-        // 用预加载数据，免loading直接显示
         songs = window._prefetchedRecommend;
         window._prefetchedRecommend = null;
       } else {
         const d = await api('/recommend/songs');
         songs = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
-        songs = songs.sort(() => Math.random() - 0.5); // 每次顺序不同
+        songs = songs.sort(() => Math.random() - 0.5);
       }
     } else if (tab === 'koko') {
       if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看</li>'; return; }
@@ -1268,14 +1301,16 @@ async function switchPlayTab(tab) {
         window._myPlaylists = d.playlist || [];
       }
       const kokoPl = window._myPlaylists.find(p => p.name.toLowerCase().trim() === 'koko');
-      if (!kokoPl) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">找不到koko歌单</li>'; return; }
+      if (!kokoPl) { if (!localCache.length) el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">找不到koko歌单</li>'; return; }
       const d = await api('/playlist/track/all', { id: kokoPl.id, limit: 100 });
       songs = (d.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||'' }));
+      saveKokoCache(songs); // 存本地缓存
     }
     window._tabSongs = songs;
-    renderTabSongs(el);
+    renderTabSongs(el); // 用最新数据刷新（静默更新）
   } catch(e) {
-    el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none">加载失败，请重试</li>';
+    if (!localCache.length) el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);list-style:none">加载失败，请重试</li>';
+    // 有缓存就静默失败，不打扰用户
   }
 }
 
@@ -1879,7 +1914,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v16</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v17</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
