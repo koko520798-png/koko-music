@@ -1449,11 +1449,7 @@ async function renderMyPage() {
       document.getElementById('statLevel').textContent = 'Lv.' + (d2.profile.level || 1);
       const hrs = Math.round((d2.listenSongs || 0) * 3 / 60);
       document.getElementById('statListen').textContent = hrs + '小时';
-      // 同步网易云背景图 → koko壁纸（只在本地没有壁纸时自动同步，不覆盖手动设置的）
-      if (d2.profile.backgroundUrl && !_wpLoad()) {
-        _applyWallpaper(d2.profile.backgroundUrl);
-        _wpSave(d2.profile.backgroundUrl);
-      }
+
     }
   } catch(e) {}
 
@@ -1883,7 +1879,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v15</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v16</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
