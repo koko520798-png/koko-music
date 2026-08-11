@@ -144,6 +144,55 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .ri-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ri-sub{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ri-add{background:none;border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--pink-deep);cursor:pointer}
+/* ====== 搜索发现 ====== */
+.srch-cat-row{display:flex;justify-content:space-around;padding:4px 0 16px}
+.srch-cat-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.srch-cat-icon{width:52px;height:52px;border-radius:14px;background:rgba(242,168,192,.18);display:flex;align-items:center;justify-content:center}
+.srch-cat-icon svg{width:26px;height:26px;stroke:var(--pink-deep);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.srch-cat-label{font-size:12px;color:var(--text);font-weight:500}
+.srch-sec-hd{display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px}
+.srch-sec-title{font-size:15px;font-weight:600}
+.srch-del-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;line-height:0}
+.srch-del-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.srch-history-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.srch-history-tag{padding:6px 14px;background:var(--card);border-radius:20px;font-size:13px;cursor:pointer;border:none;color:var(--text);-webkit-tap-highlight-color:transparent}
+.srch-rec-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.srch-rec-item{background:var(--card);border-radius:10px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.srch-rec-cover{width:100%;aspect-ratio:1/1;overflow:hidden;background:linear-gradient(135deg,var(--pink),var(--pink-deep));display:flex;align-items:center;justify-content:center;font-size:22px}
+.srch-rec-cover img{width:100%;height:100%;object-fit:cover}
+.srch-rec-name{font-size:11px;padding:4px 6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.srch-hot-box{background:var(--card);border-radius:16px;padding:14px;margin-top:14px}
+.srch-hot-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.srch-hot-title{font-size:15px;font-weight:600}
+.srch-hot-play-btn{display:flex;align-items:center;gap:4px;background:var(--pink-deep);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.srch-hot-play-btn svg{width:11px;height:11px;fill:#fff;flex-shrink:0}
+.srch-hot-item{display:flex;align-items:center;padding:8px 0;cursor:pointer;gap:10px;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border)}
+.srch-hot-item:last-child{border-bottom:none}
+.srch-hot-rank{width:20px;font-size:13px;font-weight:700;text-align:center;color:var(--text2);flex-shrink:0}
+.srch-hot-rank.top3{color:var(--pink-deep)}
+.srch-hot-info{flex:1;min-width:0}
+.srch-hot-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srch-hot-tag{display:inline-block;font-size:9px;padding:1px 4px;border-radius:3px;background:#ff4b4b;color:#fff;margin-left:4px;vertical-align:middle;line-height:1.4}
+.srch-hot-score{font-size:11px;color:var(--text2);margin-top:1px}
+/* ====== 播放列表抽屉 ====== */
+.sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.sheet-ov.open{opacity:1;pointer-events:auto}
+.pl-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:0 0 calc(20px + env(safe-area-inset-bottom,0));width:100%;max-width:500px;max-height:72vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.25,.46,.45,.94)}
+.sheet-ov.open .pl-sheet{transform:translateY(0)}
+.pl-sheet-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pl-sheet-title{font-size:16px;font-weight:700}
+.pl-sheet-count{font-size:13px;color:var(--text2);font-weight:400;margin-left:6px}
+.pl-sheet-close{background:none;border:none;cursor:pointer;color:var(--text2);font-size:24px;line-height:1;padding:0 0 0 8px}
+.pl-sheet-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pl-sheet-item{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.pl-sheet-item:active{background:rgba(0,0,0,.04)}
+.pl-sheet-item.playing .pli-name{color:var(--pink-deep);font-weight:600}
+.pli-cover{width:40px;height:40px;border-radius:8px;overflow:hidden;background:rgba(242,168,192,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.pli-cover img{width:100%;height:100%;object-fit:cover}
+.pli-info{flex:1;min-width:0}
+.pli-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pli-artist{font-size:12px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pli-rm{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px 0 4px 8px;font-size:20px;flex-shrink:0;line-height:1}
 /* ====== 我的页 ====== */
 .my-page{padding:0;overflow-y:auto}
 .my-header{background:linear-gradient(180deg,rgba(242,168,192,.45) 0%,transparent 100%);padding:28px 20px 20px;text-align:center}
@@ -394,8 +443,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
             <line x1="9" y1="12" x2="15" y2="12"/>
           </svg>
         </button>
-        <!-- bullet list（带小圆点的歌单） -->
-        <button class="ctrl-btn" onclick="cyclePlayTab()">
+        <!-- 播放列表 -->
+        <button class="ctrl-btn" onclick="openPlSheet()">
           <svg viewBox="0 0 24 24">
             <circle cx="4.5" cy="7" r="1.5"/>
             <line x1="9" y1="7" x2="20" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -426,12 +475,64 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
   <div class="page" id="page-search">
     <div class="search-page">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="搜索歌曲、歌手…" onkeydown="if(event.key==='Enter')doSearch()">
-        <button class="search-btn" onclick="doSearch()">🔍</button>
+        <input type="text" id="searchInput" placeholder="搜索歌曲、歌手…"
+               onkeydown="if(event.key==='Enter')doSearch()"
+               oninput="onSearchInput(this.value)">
+        <button class="search-btn" onclick="doSearch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
       </div>
-      <ul class="result-list" id="resultList">
-        <div class="empty"><div class="empty-icon">🎵</div><div>搜一首歌来听吧</div></div>
-      </ul>
+      <!-- 发现区（空状态） -->
+      <div id="srchDiscovery">
+        <!-- 分类入口 -->
+        <div class="srch-cat-row">
+          <div class="srch-cat-item" onclick="searchByCategory('artist')">
+            <div class="srch-cat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <div class="srch-cat-label">歌手</div>
+          </div>
+          <div class="srch-cat-item" onclick="searchByCategory('genre')">
+            <div class="srch-cat-icon"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+            <div class="srch-cat-label">曲风</div>
+          </div>
+          <div class="srch-cat-item" onclick="searchByCategory('zone')">
+            <div class="srch-cat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+            <div class="srch-cat-label">专区</div>
+          </div>
+          <div class="srch-cat-item" onclick="startRecognize()">
+            <div class="srch-cat-icon"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+            <div class="srch-cat-label">识曲</div>
+          </div>
+        </div>
+        <!-- 搜索历史 -->
+        <div id="srchHistorySection" style="display:none">
+          <div class="srch-sec-hd">
+            <div class="srch-sec-title">搜索历史</div>
+            <button class="srch-del-btn" onclick="clearSearchHistory()">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+          <div class="srch-history-tags" id="srchHistoryTags"></div>
+        </div>
+        <!-- 猜你喜欢 -->
+        <div id="srchRecommendSection" style="display:none">
+          <div class="srch-sec-hd"><div class="srch-sec-title">猜你喜欢</div></div>
+          <div class="srch-rec-grid" id="srchRecGrid"></div>
+        </div>
+        <!-- 热搜榜 -->
+        <div class="srch-hot-box">
+          <div class="srch-hot-hd">
+            <div class="srch-hot-title">热搜榜</div>
+            <button class="srch-hot-play-btn" onclick="playHotList()">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>播放
+            </button>
+          </div>
+          <div id="srchHotList"><div class="loading" style="padding:8px 0;font-size:13px">加载中…</div></div>
+        </div>
+      </div>
+      <!-- 搜索结果 -->
+      <ul class="result-list" id="resultList" style="display:none"></ul>
     </div>
   </div>
 
@@ -459,6 +560,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
     <div class="modal-qr" id="qrBox"><div class="heart-loader"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></div>
     <div class="modal-qr-tip" id="qrTip">生成中…</div>
     <button class="modal-close" onclick="closeLogin()">取消</button>
+  </div>
+</div>
+
+<!-- 播放列表抽屉 -->
+<div class="sheet-ov" id="plSheetOv" onclick="closePlSheetOv(event)">
+  <div class="pl-sheet">
+    <div class="pl-sheet-hd">
+      <div class="pl-sheet-title">当前播放<span class="pl-sheet-count" id="plSheetCount"></span></div>
+      <button class="pl-sheet-close" onclick="closePlSheet()">×</button>
+    </div>
+    <div class="pl-sheet-list" id="plSheetList"></div>
   </div>
 </div>
 
@@ -655,6 +767,7 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   updateCapsuleMid(tab);
   if (tab === 'my') renderMyPage();
+  if (tab === 'search') initSearchDiscovery();
 }
 // 顶部胶囊中间：播放页=模式图标，其他页=文字
 function updateCapsuleMid(tab) {
@@ -686,17 +799,148 @@ async function api(path, params = {}) {
 
 // ====== 搜索 ======
 let searchResults = []; // 全局缓存，避免onclick里JSON字符串特殊字符问题
+let _hotSongs = []; // 热搜榜歌曲缓存（搜索后填充）
+
+// 搜索历史
+function getSrchHistory(){try{return JSON.parse(localStorage.getItem('nease_srch_history')||'[]');}catch(e){return[];}}
+function addSrchHistory(q){if(!q.trim())return;let h=getSrchHistory().filter(x=>x!==q);h.unshift(q);localStorage.setItem('nease_srch_history',JSON.stringify(h.slice(0,12)));}
+function clearSearchHistory(){localStorage.removeItem('nease_srch_history');renderSrchHistory();}
+function renderSrchHistory(){
+  const h=getSrchHistory();
+  const sec=document.getElementById('srchHistorySection');
+  const tags=document.getElementById('srchHistoryTags');
+  if(!sec||!tags)return;
+  if(!h.length){sec.style.display='none';return;}
+  sec.style.display='';
+  tags.innerHTML=h.map(q=>`<button class="srch-history-tag" onclick="srchFromHistory(${JSON.stringify(q)})">${q}</button>`).join('');
+}
+function srchFromHistory(q){document.getElementById('searchInput').value=q;doSearch();}
+
+// 输入时切换显示
+function onSearchInput(val){
+  const disc=document.getElementById('srchDiscovery');
+  const res=document.getElementById('resultList');
+  if(!val.trim()){disc.style.display='';res.style.display='none';}
+}
+
+// 热搜榜
+async function loadHotSearch(){
+  try{
+    const d=await api('/search/hot/detail');
+    const hots=d.data?.hots||[];
+    const el=document.getElementById('srchHotList');
+    if(!el)return;
+    el.innerHTML=hots.slice(0,10).map((item,i)=>{
+      const tag=item.iconType===2?'<span class="srch-hot-tag">HOT</span>':'';
+      return `<div class="srch-hot-item" onclick="playHotSong(${JSON.stringify(item.searchWord)})">
+        <div class="srch-hot-rank${i<3?' top3':''}">${i+1}</div>
+        <div class="srch-hot-info">
+          <div class="srch-hot-name">${item.searchWord}${tag}</div>
+          ${item.score?`<div class="srch-hot-score">${Number(item.score).toLocaleString()}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){const el=document.getElementById('srchHotList');if(el)el.innerHTML='';}
+}
+async function playHotSong(kw){
+  showToast('搜索中…');
+  try{
+    const d=await api('/cloudsearch',{keywords:kw,limit:1});
+    const s=d.result?.songs?.[0];
+    if(!s){showToast('未找到歌曲');return;}
+    await addAndPlay({id:s.id,name:s.name,artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'),cover:s.al?.picUrl||''});
+  }catch(e){showToast('播放失败');}
+}
+async function playHotList(){
+  showToast('加载热搜榜…');
+  try{
+    const el=document.getElementById('srchHotList');
+    const items=el?el.querySelectorAll('.srch-hot-item'):[];
+    if(!items.length){showToast('热搜榜未加载');return;}
+    const keywords=Array.from(items).map(it=>it.querySelector('.srch-hot-name').textContent.replace('HOT','').trim());
+    const first=keywords[0];
+    const d=await api('/cloudsearch',{keywords:first,limit:1});
+    const s=d.result?.songs?.[0];
+    if(s){await addAndPlay({id:s.id,name:s.name,artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'),cover:s.al?.picUrl||''});}
+    showToast('已播放热搜第一首');
+  }catch(e){showToast('播放失败');}
+}
+
+// 猜你喜欢
+async function loadRecommend(){
+  try{
+    const d=await api('/personalized/newsong',{limit:6});
+    const songs=(d.result||[]).slice(0,6);
+    if(!songs.length)return;
+    const sec=document.getElementById('srchRecommendSection');
+    const grid=document.getElementById('srchRecGrid');
+    if(!sec||!grid)return;
+    grid.innerHTML=songs.map((item,i)=>{
+      const s=item.song||item;
+      const cover=s.album?.blurPicUrl||s.album?.picUrl||'';
+      return `<div class="srch-rec-item" onclick="addAndPlay({id:${s.id},name:${JSON.stringify(s.name)},artist:${JSON.stringify((s.artists||[]).map(a=>a.name).join('/'))},cover:${JSON.stringify(cover)}})">
+        <div class="srch-rec-cover">${cover?`<img src="${cover}?param=300y300">`:''}</div>
+        <div class="srch-rec-name">${s.name}</div>
+      </div>`;
+    }).join('');
+    sec.style.display='';
+  }catch(e){}
+}
+
+// 分类（暂时占位）
+function searchByCategory(type){showToast('功能开发中 ♪');}
+function startRecognize(){showToast('识曲功能开发中 ♪');}
+
+// 播放列表抽屉
+function openPlSheet(){
+  const ov=document.getElementById('plSheetOv');
+  const list=document.getElementById('plSheetList');
+  const cnt=document.getElementById('plSheetCount');
+  if(!ov||!list)return;
+  cnt.textContent=`（${playlist.length}）`;
+  list.innerHTML=playlist.map((s,i)=>{
+    const cover=s.cover?s.cover+'?param=200y200':'';
+    const playing=i===curIdx?' playing':'';
+    return `<div class="pl-sheet-item${playing}" onclick="plSheetPlay(${i})">
+      <div class="pli-cover">${cover?`<img src="${cover}">`:'♪'}</div>
+      <div class="pli-info"><div class="pli-name">${s.name}</div><div class="pli-artist">${s.artist||''}</div></div>
+      <button class="pli-rm" onclick="event.stopPropagation();plSheetRemove(${i})">×</button>
+    </div>`;
+  }).join('')||(playlist.length?'':'<div style="padding:24px;text-align:center;color:var(--text2);font-size:14px">播放列表是空的</div>');
+  ov.classList.add('open');
+}
+function closePlSheet(){document.getElementById('plSheetOv').classList.remove('open');}
+function closePlSheetOv(e){if(e.target===e.currentTarget)closePlSheet();}
+async function plSheetPlay(idx){
+  closePlSheet();
+  curIdx=idx;
+  await playCur();
+  switchTab('play');
+}
+function plSheetRemove(idx){
+  removeSong(idx);
+  openPlSheet(); // 刷新
+}
+
+// 搜索发现页初始化（切到搜索tab时调用）
+function initSearchDiscovery(){
+  renderSrchHistory();
+  loadHotSearch();
+  if(cookie)loadRecommend();
+}
 
 async function doSearch() {
   const kw = document.getElementById('searchInput').value.trim();
   if (!kw) return;
+  addSrchHistory(kw);
+  document.getElementById('srchDiscovery').style.display='none';
   const el = document.getElementById('resultList');
+  el.style.display='';
   el.innerHTML = '<div class="loading"><div class="heart-loader" style="width:24px;height:24px"><svg viewBox="0 0 24 24"><path class="hp" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div> 搜索中…</div>';
   try {
     const d = await api('/cloudsearch', { keywords: kw, limit: 20 });
     const songs = d.result?.songs || [];
     if (!songs.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">😶</div><div>没找到结果</div></div>'; return; }
-    // 存到全局数组，避免onclick里JSON特殊字符导致失效
     searchResults = songs.map(s => ({
       id: s.id,
       name: s.name,
