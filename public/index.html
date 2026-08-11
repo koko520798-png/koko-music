@@ -713,6 +713,7 @@ function getSilentUrl() { return UNLOCK_SRC; }
 
 const _urlCache = {};
 let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
+let _audioSrcSongId = null; // 记录当前 audio.src 预设的是哪首歌（schedulePrefetch用）
 
 async function _prefetchUrl(songId) {
   if (!songId || _urlCache[songId]) return;
@@ -726,6 +727,7 @@ async function _prefetchUrl(songId) {
       if (!isPlaying && !_pendingPlay && playlist[curIdx]?.id === songId) {
         audio.src = url;
         audio.preload = 'none';
+        _audioSrcSongId = songId; // 记录预设的是哪首歌
       }
       // 如果用户在等这首歌（手势里已激活过audio），自动触发播放
       if (_pendingPlay === songId) {
@@ -793,10 +795,11 @@ async function playCur() {
     return;
   }
 
-  // ① bis：audio.src 已经是真实 URL（schedulePrefetch 提前设置了）直接 play
-  const curSrc = audio.src;
-  const isUnlockOrEmpty = !curSrc || curSrc.includes('unlock.wav') || curSrc === location.origin + '/';
-  if (!isUnlockOrEmpty) {
+  // ① bis：audio.src 已经是这首歌的真实 URL（schedulePrefetch 提前设置了）直接 play
+  // 必须确认是同一首歌的预设，防止播旧歌时切歌误用旧歌URL
+  if (_audioSrcSongId === song.id) {
+    const curSrc = audio.src;
+    _audioSrcSongId = null;
     _doPlay(curSrc, song.id);
     return;
   }
@@ -1870,7 +1873,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sb-top" style="position:relative">
-    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v13</span>
+    <span style="position:absolute;top:calc(env(safe-area-inset-top,0)+10px);right:14px;font-size:10px;color:var(--text2);opacity:.5;pointer-events:none">v14</span>
     <div class="sb-user-row">
       <div class="sb-avatar" onclick="openDressSheet()">
         <img id="sbAvatar" src="" alt="" onerror="this.style.display='none'">
