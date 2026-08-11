@@ -576,6 +576,10 @@ setTimeout(() => prefetchAll(), 0);
 // 如果playlist非空（localStorage有数据），主动同步到服务器（保证服务器有最新数据）
 if (playlist.length) {
   cloudSavePlaylist(playlist); // 后台静默同步，不阻塞UI
+  if (curIdx >= playlist.length) curIdx = 0;
+  renderPlaylist();
+  updateSongUI(playlist[curIdx] || playlist[0]);
+  prefetchAll();
 }
 // 如果playlist为空，先从本地 heart/koko 缓存恢复（0秒，立刻有歌）
 if (!playlist.length) {
