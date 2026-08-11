@@ -26,9 +26,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
   box-shadow:0 2px 12px rgba(224,112,144,.12)
 }
 /* ====== 底部tab ====== */
-.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--border);
+.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:transparent;border-top:none;
   padding:0 0 env(safe-area-inset-bottom,0);display:flex}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);gap:3px;transition:color .2s}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;font-size:14px;font-weight:600;color:var(--text2);gap:3px;transition:color .2s;text-shadow:0 1px 4px rgba(255,255,255,.6)}
 .tab.active{color:var(--active)}
 /* ====== 主内容：固定在屏幕内，不让页面整体滚动 ====== */
 .main{
