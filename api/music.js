@@ -16,8 +16,8 @@ export default async function handler(req, res) {
   if (key !== MCP_KEY) return res.status(401).json({ error: 'unauthorized' });
 
   const action = req.query.action;
-  if (!['state', 'command'].includes(action)) {
-    return res.status(400).json({ error: 'action must be state or command' });
+  if (!['state', 'command', 'cookie'].includes(action)) {
+    return res.status(400).json({ error: 'action must be state, command, or cookie' });
   }
 
   const url = `${VPS}/music/${action}?secret=${VPS_SECRET}`;

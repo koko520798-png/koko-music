@@ -582,6 +582,18 @@ const API = '/api/netease?key=xiaomao520';
 const MUSIC_API = '/api/music?key=xiaomao520';
 const audio = document.getElementById('audio');
 
+// ===== 页面加载时上报已保存的cookie到VPS，让哥哥的MCP能用 =====
+(function reportSavedCookie() {
+  const saved = localStorage.getItem('nease_cookie');
+  if (saved) {
+    fetch(MUSIC_API + '&action=cookie', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cookie: saved })
+    }).catch(() => {});
+  }
+})();
+
 // ===== 播放状态上报到 VPS（供哥哥的MCP读取）=====
 let _reportTimer = null;
 function reportMusicState(playing) {
@@ -626,7 +638,7 @@ setInterval(async () => {
         if (d.url) _urlCache[d.id] = d.url;
         const existing = playlist.findIndex(s => s.id === d.id);
         if (existing >= 0) { playSongAt(existing); }
-        else { await addAndPlay({ id: d.id, name: d.name || '', artist: d.artist || '', cover: '' }); }
+        else { await addAndPlay({ id: d.id, name: d.name || '', artist: d.artist || '', cover: d.cover || '' }); }
       } else {
         const kw = d.keyword || d.name || '';
         if (kw) await playHotSong(kw);
@@ -1685,6 +1697,12 @@ async function openLogin() {
           document.getElementById('qrTip').textContent = `803✓ raw:${rawCookie.slice(0,30)} → parsed:${cookie.slice(0,30)}`;
           if (cookie) {
             localStorage.setItem('nease_cookie', cookie);
+            // 上报cookie到VPS，供哥哥的MCP使用
+            fetch(MUSIC_API + '&action=cookie', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cookie })
+            }).catch(() => {});
             await fetchUserInfo();
             loadLikedSongs(); // 异步加载心动歌单，不阻塞登录流程
             closeLogin();

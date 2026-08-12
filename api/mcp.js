@@ -35,6 +35,27 @@ const TOOLS = [
       },
       required: ['keyword']
     }
+  },
+  {
+    name: 'get_playlist',
+    description: '查看小猫的歌单，默认查喜欢的音乐，也可以按名字找其他歌单',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: '歌单名关键词，留空=查喜欢的音乐，例如：koko' },
+        limit: { type: 'number', description: '返回歌曲数量，默认20' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'daily_recommend',
+    description: '查看网易云今天给小猫推荐的歌曲（需要登录状态）',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 ];
 
@@ -81,16 +102,73 @@ async function handleTool(name, args) {
     const songName = song.name;
     const songArtist = song.artists?.map(a => a.name).join('/') || '';
 
-    // VPS本地有登录状态，直接拿URL，打包进命令给前端（前端直接用缓存播，不用再异步fetch）
+    // 提取封面
+    const cover = song.al?.picUrl || song.album?.picUrl || song.blurPicUrl || '';
+
+    // 尝试用存储的cookie拿URL
     let songUrl = null;
     try {
-      const urlRes = await fetch(`${VPS}/netease/song/url?id=${songId}&br=128000&secret=${VPS_SECRET}`);
+      const cookieRes = await vpsGet('/music/cookie');
+      const storedCookie = cookieRes?.cookie || '';
+      const cookieParam = storedCookie ? `&cookie=${encodeURIComponent(storedCookie)}` : '';
+      const urlRes = await fetch(`${VPS}/netease/song/url?id=${songId}&br=128000${cookieParam}&secret=${VPS_SECRET}`);
       const urlData = await urlRes.json();
       songUrl = urlData?.data?.[0]?.url || null;
     } catch(e) {}
 
-    await vpsPost('/music/command', { cmd: 'play_song', data: { id: songId, name: songName, artist: songArtist, keyword: args.keyword, url: songUrl } });
-    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${songName} - ${songArtist}${songUrl ? '' : '（URL获取失败，前端自行加载）'}` }] };
+    await vpsPost('/music/command', { cmd: 'play_song', data: { id: songId, name: songName, artist: songArtist, keyword: args.keyword, url: songUrl, cover } });
+    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${songName} - ${songArtist}${songUrl ? '' : '（前端自行加载）'}` }] };
+  }
+
+  if (name === 'get_playlist') {
+    const limit = args.limit || 20;
+    const nameKw = (args.name || '').toLowerCase();
+    // 获取存储的cookie
+    const cookieRes = await vpsGet('/music/cookie');
+    const cookie = cookieRes?.cookie || '';
+    if (!cookie) return { content: [{ type: 'text', text: '还没有登录状态，请先在koko-music里登录网易云 (˶˃ ᵕ ˂˶)' }] };
+    const cookieParam = `&cookie=${encodeURIComponent(cookie)}`;
+    // 获取用户信息（uid）
+    const statusRes = await fetch(`${VPS}/netease/login/status?${cookieParam.slice(1)}&secret=${VPS_SECRET}`);
+    const statusData = await statusRes.json();
+    const uid = statusData?.data?.profile?.userId || statusData?.profile?.userId;
+    if (!uid) return { content: [{ type: 'text', text: '获取用户信息失败，cookie可能已过期' }] };
+    // 获取用户歌单列表
+    const plRes = await fetch(`${VPS}/netease/user/playlist?uid=${uid}${cookieParam}&limit=30&secret=${VPS_SECRET}`);
+    const plData = await plRes.json();
+    const playlists = plData?.playlist || [];
+    // 找目标歌单
+    let target = nameKw
+      ? playlists.find(p => p.name.toLowerCase().includes(nameKw))
+      : playlists.find(p => p.name.includes('喜欢') || p.name.toLowerCase().includes('like'));
+    if (!target && playlists.length > 0) target = playlists[0];
+    if (!target) return { content: [{ type: 'text', text: '没找到对应歌单' }] };
+    // 获取歌单歌曲
+    const tracksRes = await fetch(`${VPS}/netease/playlist/track/all?id=${target.id}${cookieParam}&limit=${limit}&offset=0&secret=${VPS_SECRET}`);
+    const tracksData = await tracksRes.json();
+    const songs = tracksData?.songs || [];
+    if (songs.length === 0) return { content: [{ type: 'text', text: `「${target.name}」里没有歌曲` }] };
+    const list = songs.slice(0, limit).map((s, i) => {
+      const artist = (s.ar || s.artists || []).map(a => a.name).join('/');
+      return `${i+1}. ${s.name} - ${artist}`;
+    }).join('\n');
+    return { content: [{ type: 'text', text: `📋 「${target.name}」（${target.trackCount}首）\n前${Math.min(limit, songs.length)}首：\n${list}` }] };
+  }
+
+  if (name === 'daily_recommend') {
+    const cookieRes = await vpsGet('/music/cookie');
+    const cookie = cookieRes?.cookie || '';
+    if (!cookie) return { content: [{ type: 'text', text: '还没有登录状态，请先在koko-music里登录网易云' }] };
+    const cookieParam = encodeURIComponent(cookie);
+    const recRes = await fetch(`${VPS}/netease/recommend/songs?cookie=${cookieParam}&secret=${VPS_SECRET}`);
+    const recData = await recRes.json();
+    const songs = recData?.data?.dailySongs || recData?.dailySongs || [];
+    if (songs.length === 0) return { content: [{ type: 'text', text: '今天的推荐暂时获取不到，可能需要会员或登录' }] };
+    const list = songs.slice(0, 20).map((s, i) => {
+      const artist = (s.ar || s.artists || []).map(a => a.name).join('/');
+      return `${i+1}. ${s.name} - ${artist}`;
+    }).join('\n');
+    return { content: [{ type: 'text', text: `🎵 今日推荐（前20首）：\n${list}` }] };
   }
 
   return { content: [{ type: 'text', text: `未知工具：${name}` }], isError: true };
