@@ -91,13 +91,14 @@ async function handleTool(name, args) {
 
   if (name === 'play_song') {
     // 通过VPS上的netease API搜索
-    const searchRes = await fetch(`${VPS}/netease/search?keywords=${encodeURIComponent(args.keyword)}&limit=1&secret=${VPS_SECRET}`);
+    const searchRes = await fetch(`${VPS}/netease/search?keywords=${encodeURIComponent(args.keyword)}&limit=10&secret=${VPS_SECRET}`);
     const searchData = await searchRes.json();
     const songs = searchData?.result?.songs;
     if (!songs || songs.length === 0) {
       return { content: [{ type: 'text', text: `没找到"${args.keyword}"相关的歌 (˶˃ ᵕ ˂˶)` }] };
     }
-    const song = songs[0];
+    // 优先选歌手名不含 "-" 的（过滤翻唱/混音版），没有就退回第一首
+    const song = songs.find(s => (s.artists || []).every(a => !a.name.includes('-'))) || songs[0];
     const songId = song.id;
     const songName = song.name;
     const songArtist = song.artists?.map(a => a.name).join('/') || '';
