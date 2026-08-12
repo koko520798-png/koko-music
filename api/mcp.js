@@ -112,19 +112,10 @@ async function handleTool(name, args) {
       } catch(e) {}
     }
 
-    // 尝试用存储的cookie拿URL
-    let songUrl = null;
-    try {
-      const cookieRes = await vpsGet('/music/cookie');
-      const storedCookie = cookieRes?.cookie || '';
-      const cookieParam = storedCookie ? `&cookie=${encodeURIComponent(storedCookie)}` : '';
-      const urlRes = await fetch(`${VPS}/netease/song/url?id=${songId}&br=128000${cookieParam}&secret=${VPS_SECRET}`);
-      const urlData = await urlRes.json();
-      songUrl = urlData?.data?.[0]?.url || null;
-    } catch(e) {}
-
-    await vpsPost('/music/command', { cmd: 'play_song', data: { id: songId, name: songName, artist: songArtist, keyword: args.keyword, url: songUrl, cover } });
-    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${songName} - ${songArtist}${songUrl ? '' : '（前端自行加载）'}` }] };
+    // 不在VPS预取URL（HTTP URL在HTTPS PWA里会被Mixed Content拒绝）
+    // 让前端用本地cookie自己fetch，跟之前一样
+    await vpsPost('/music/command', { cmd: 'play_song', data: { id: songId, name: songName, artist: songArtist, keyword: args.keyword, cover } });
+    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${songName} - ${songArtist}` }] };
   }
 
   if (name === 'get_playlist') {
