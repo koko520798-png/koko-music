@@ -579,7 +579,58 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
 <script>
 const API = '/api/netease?key=xiaomao520';
+const MUSIC_API = '/api/music?key=xiaomao520';
 const audio = document.getElementById('audio');
+
+// ===== 播放状态上报到 VPS（供哥哥的MCP读取）=====
+let _reportTimer = null;
+function reportMusicState(playing) {
+  clearTimeout(_reportTimer);
+  _reportTimer = setTimeout(() => {
+    const song = playlist[curIdx];
+    if (!song) return;
+    fetch(MUSIC_API + '&action=state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        song: song.name || '',
+        artist: song.artist || '',
+        album: song.album || '',
+        playing: playing
+      })
+    }).catch(() => {});
+  }, 300);
+}
+
+// ===== 命令轮询（每3秒问一次VPS有没有哥哥发的指令）=====
+setInterval(async () => {
+  try {
+    const r = await fetch(MUSIC_API + '&action=command');
+    const data = await r.json();
+    if (!data.cmd) return;
+    const cmd = data.cmd;
+    if (cmd === 'play') { if (audio.paused) togglePlay(); }
+    else if (cmd === 'pause') { if (!audio.paused) togglePlay(); }
+    else if (cmd === 'toggle') { togglePlay(); }
+    else if (cmd === 'next') { nextSong(); }
+    else if (cmd === 'prev') { prevSong(); }
+    else if (cmd === 'play_song') {
+      // 哥哥点歌：搜索并播放
+      const d = data.data || {};
+      if (!d.id && !d.keyword) return;
+      if (d.id) {
+        const existing = playlist.findIndex(s => s.id === d.id);
+        if (existing >= 0) { playSongAt(existing); return; }
+      }
+      // 搜索关键词（或用歌名+歌手）
+      const kw = d.keyword || ((d.name || '') + ' ' + (d.artist || '')).trim();
+      if (kw) {
+        showToast('哥哥点歌：' + (d.name || kw) + ' ♡');
+        await playHotSong(kw);
+      }
+    }
+  } catch(e) {}
+}, 3000);
 
 // 页面加载时：绑定本地真实WAV文件（78KB，iOS认为这是合法音频，激活audio element用）
 // 不用 data URI 也不用 IndexedDB blob——本地文件最可靠，iOS绝对不拒绝
@@ -1277,12 +1328,14 @@ audio.addEventListener('play', () => {
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing';
   }
+  reportMusicState(true);
 });
 audio.addEventListener('pause', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'paused';
   }
+  reportMusicState(false);
 });
 audio.addEventListener('ended', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
