@@ -77,8 +77,20 @@ async function handleTool(name, args) {
       return { content: [{ type: 'text', text: `没找到"${args.keyword}"相关的歌 (˶˃ ᵕ ˂˶)` }] };
     }
     const song = songs[0];
-    await vpsPost('/music/command', { cmd: 'play_song', data: { id: song.id, name: song.name, artist: song.artists?.map(a => a.name).join('/') || '', keyword: args.keyword } });
-    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${song.name} - ${song.artists?.map(a => a.name).join('/')}` }] };
+    const songId = song.id;
+    const songName = song.name;
+    const songArtist = song.artists?.map(a => a.name).join('/') || '';
+
+    // VPS本地有登录状态，直接拿URL，打包进命令给前端（前端直接用缓存播，不用再异步fetch）
+    let songUrl = null;
+    try {
+      const urlRes = await fetch(`${VPS}/netease/song/url?id=${songId}&br=128000&secret=${VPS_SECRET}`);
+      const urlData = await urlRes.json();
+      songUrl = urlData?.data?.[0]?.url || null;
+    } catch(e) {}
+
+    await vpsPost('/music/command', { cmd: 'play_song', data: { id: songId, name: songName, artist: songArtist, keyword: args.keyword, url: songUrl } });
+    return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${songName} - ${songArtist}${songUrl ? '' : '（URL获取失败，前端自行加载）'}` }] };
   }
 
   return { content: [{ type: 'text', text: `未知工具：${name}` }], isError: true };

@@ -618,16 +618,16 @@ setInterval(async () => {
     else if (cmd === 'next') { nextSong(); }
     else if (cmd === 'prev') { prevSong(); }
     else if (cmd === 'play_song') {
-      // 哥哥点歌：优先用ID直接播，没有ID才搜索
+      // 哥哥点歌：优先用VPS预取的URL直接播，不需要前端再异步fetch
       if (!d.id && !d.keyword && !d.name) return;
       showToast('哥哥点歌：' + (d.name || d.keyword || '') + ' ♡');
       if (d.id) {
-        // 有ID：直接播这首歌（不重新搜，避免搜到其他版本）
+        // 如果VPS已经拿到URL，先塞进缓存，playCur()会走缓存路径直接播
+        if (d.url) _urlCache[d.id] = d.url;
         const existing = playlist.findIndex(s => s.id === d.id);
         if (existing >= 0) { playSongAt(existing); }
         else { await addAndPlay({ id: d.id, name: d.name || '', artist: d.artist || '', cover: '' }); }
       } else {
-        // 没有ID：用原始keyword搜索
         const kw = d.keyword || d.name || '';
         if (kw) await playHotSong(kw);
       }
