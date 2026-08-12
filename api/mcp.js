@@ -77,7 +77,7 @@ async function handleTool(name, args) {
       return { content: [{ type: 'text', text: `没找到"${args.keyword}"相关的歌 (˶˃ ᵕ ˂˶)` }] };
     }
     const song = songs[0];
-    await vpsPost('/music/command', { cmd: 'play_song', data: { id: song.id, name: song.name, artist: song.artists?.map(a => a.name).join('/') || '' } });
+    await vpsPost('/music/command', { cmd: 'play_song', data: { id: song.id, name: song.name, artist: song.artists?.map(a => a.name).join('/') || '', keyword: args.keyword } });
     return { content: [{ type: 'text', text: `🎵 已为老婆点歌：${song.name} - ${song.artists?.map(a => a.name).join('/')}` }] };
   }
 

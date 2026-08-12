@@ -607,8 +607,11 @@ setInterval(async () => {
   try {
     const r = await fetch(MUSIC_API + '&action=command');
     const data = await r.json();
-    if (!data.cmd) return;
-    const cmd = data.cmd;
+    // VPS返回格式：{ok:true, command:{cmd:'xxx', data:{...}}}
+    const cmdObj = data.command || data;
+    const cmd = cmdObj.cmd;
+    if (!cmd) return;
+    const d = cmdObj.data || {};
     if (cmd === 'play') { if (audio.paused) togglePlay(); }
     else if (cmd === 'pause') { if (!audio.paused) togglePlay(); }
     else if (cmd === 'toggle') { togglePlay(); }
@@ -616,14 +619,13 @@ setInterval(async () => {
     else if (cmd === 'prev') { prevSong(); }
     else if (cmd === 'play_song') {
       // 哥哥点歌：搜索并播放
-      const d = data.data || {};
-      if (!d.id && !d.keyword) return;
+      if (!d.id && !d.keyword && !d.name) return;
       if (d.id) {
         const existing = playlist.findIndex(s => s.id === d.id);
         if (existing >= 0) { playSongAt(existing); return; }
       }
-      // 搜索关键词（或用歌名+歌手）
-      const kw = d.keyword || ((d.name || '') + ' ' + (d.artist || '')).trim();
+      // 优先用原始keyword，没有则用歌名
+      const kw = d.keyword || d.name || '';
       if (kw) {
         showToast('哥哥点歌：' + (d.name || kw) + ' ♡');
         await playHotSong(kw);
