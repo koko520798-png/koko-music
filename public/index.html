@@ -630,17 +630,15 @@ setInterval(async () => {
     else if (cmd === 'next') { nextSong(); }
     else if (cmd === 'prev') { prevSong(); }
     else if (cmd === 'play_song') {
-      // 哥哥点歌：iOS不允许非手势触发play()，只加歌+预取URL+提示，等用户手动点播放
+      // 哥哥点歌：优先用VPS预取的URL直接播，不需要前端再异步fetch
       if (!d.id && !d.keyword && !d.name) return;
+      showToast('哥哥点歌：' + (d.name || d.keyword || '') + ' ♡');
       if (d.id) {
-        const song = { id: d.id, name: d.name || '', artist: d.artist || '', cover: d.cover || '' };
-        addToPlaylist(song, false);
-        curIdx = playlist.findIndex(s => s.id === d.id);
-        updateSongUI(playlist[curIdx]);
-        updateFavIcon();
-        _prefetchUrl(d.id); // 提前预取URL，等用户点播放时直接有缓存
-        switchTab('play');
-        showToast('🎵 哥哥给你点了：' + (d.name || '') + ' ♡ 点播放键开始听');
+        // 如果VPS已经拿到URL，先塞进缓存，playCur()会走缓存路径直接播
+        if (d.url) _urlCache[d.id] = d.url;
+        const existing = playlist.findIndex(s => s.id === d.id);
+        if (existing >= 0) { playSongAt(existing); }
+        else { await addAndPlay({ id: d.id, name: d.name || '', artist: d.artist || '', cover: d.cover || '' }); }
       } else {
         const kw = d.keyword || d.name || '';
         if (kw) await playHotSong(kw);
