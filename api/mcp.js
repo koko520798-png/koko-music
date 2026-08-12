@@ -91,7 +91,12 @@ async function handleTool(name, args) {
 
   if (name === 'play_song') {
     // 通过VPS上的netease API搜索
-    const searchRes = await fetch(`${VPS}/netease/search?keywords=${encodeURIComponent(args.keyword)}&limit=10&secret=${VPS_SECRET}`);
+    // 先拿cookie，搜索时带上（会员可见原版）
+    const cookieRes = await vpsGet('/music/cookie');
+    const storedCookie = cookieRes?.cookie || '';
+    const cookieParam = storedCookie ? `&cookie=${encodeURIComponent(storedCookie)}` : '';
+
+    const searchRes = await fetch(`${VPS}/netease/search?keywords=${encodeURIComponent(args.keyword)}&limit=10${cookieParam}&secret=${VPS_SECRET}`);
     const searchData = await searchRes.json();
     const songs = searchData?.result?.songs;
     if (!songs || songs.length === 0) {
