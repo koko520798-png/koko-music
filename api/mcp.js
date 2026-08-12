@@ -102,8 +102,15 @@ async function handleTool(name, args) {
     const songName = song.name;
     const songArtist = song.artists?.map(a => a.name).join('/') || '';
 
-    // 提取封面
-    const cover = song.al?.picUrl || song.album?.picUrl || song.blurPicUrl || '';
+    // 搜索接口没有封面，需额外调 song/detail 拿
+    let cover = song.al?.picUrl || song.album?.picUrl || '';
+    if (!cover) {
+      try {
+        const detailRes = await fetch(`${VPS}/netease/song/detail?ids=${songId}&secret=${VPS_SECRET}`);
+        const detailData = await detailRes.json();
+        cover = detailData?.songs?.[0]?.al?.picUrl || '';
+      } catch(e) {}
+    }
 
     // 尝试用存储的cookie拿URL
     let songUrl = null;
