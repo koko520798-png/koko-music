@@ -2197,7 +2197,8 @@ function showToast(msg) {
 // ====== 初始化 ======
 window.addEventListener('DOMContentLoaded', () => {
   updateModeIcon(); // 初始化顶部胶囊模式图标
-  if (cookie && userInfo) {
+  if (cookie) {
+    // userInfo 可能还没加载到（switchPlayTab内部会自动 fetchUserInfo）
     loadLikedSongs(); // 页面加载时预拉心动歌单
     switchPlayTab('heart');
     // 后台预加载推荐 + 预取第一首URL（同时解决iOS解锁和推荐自动填充）
