@@ -808,6 +808,19 @@ window.addEventListener('message', function(e) {
   if (e.data.action === 'setWallpaper') {
     _applyWallpaper(e.data.dataUrl || null);
   }
+  // 家里打开音乐overlay时发来：同步UI状态（解决后台切歌后切回来显示不同步）
+  if (e.data.action === 'syncUI') {
+    if (playlist.length && playlist[curIdx]) {
+      updateSongUI(playlist[curIdx]);
+      updateFavIcon();
+      setPlayIcon(isPlaying);
+    }
+    // 重启进度条RAF（iOS在hidden iframe里会throttle RAF，切回来需要重启）
+    if (isPlaying) {
+      if (_rafId) cancelAnimationFrame(_rafId);
+      _rafId = requestAnimationFrame(_rafTick);
+    }
+  }
 });
 
 // 启动时：通知家里"我准备好了"，请求家里发cookie过来；同时把自己已有的cookie也发给家里存
