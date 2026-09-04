@@ -2194,9 +2194,23 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.style.opacity='0', 2000);
 }
 
+// ====== 从VPS自动拉cookie（IPA/PWA首次或cookie丢失时） ======
+async function ensureLoginFromVPS() {
+  if (cookie) return; // 本地已有cookie，跳过
+  try {
+    const r = await fetch('/api/music?key=xiaomao520&action=cookie');
+    const d = await r.json();
+    if (d.cookie) {
+      cookie = d.cookie;
+      localStorage.setItem('nease_cookie', cookie);
+    }
+  } catch(e) {}
+}
+
 // ====== 初始化 ======
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   updateModeIcon(); // 初始化顶部胶囊模式图标
+  await ensureLoginFromVPS(); // 没cookie就去VPS拉，IPA/PWA自动登录
   if (cookie) {
     // userInfo 可能还没加载到（switchPlayTab内部会自动 fetchUserInfo）
     loadLikedSongs(); // 页面加载时预拉心动歌单
