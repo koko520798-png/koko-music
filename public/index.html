@@ -1427,9 +1427,11 @@ function seekTo(e) {
 
 function togglePlay() {
   if (audio.paused) {
-    // src是unlock.wav或空 → 需要重新加载歌曲（不能直接play unlock.wav给用户听）
+    // src是unlock.wav、空、或不匹配当前歌 → 需要重新加载正确歌曲
     const isUnlock = !audio.src || audio.src.endsWith('/unlock.wav') || audio.src.includes('unlock.wav');
-    if (isUnlock) playCur(); else { audio.play().catch(() => playCur()); }
+    const curSongUrl = playlist[curIdx] ? _urlCache[playlist[curIdx].id] : null;
+    const isMismatch = curSongUrl && audio.src && audio.src !== curSongUrl;
+    if (isUnlock || isMismatch) playCur(); else { audio.play().catch(() => playCur()); }
     isPlaying = true; setPlayIcon(true);
   } else { audio.pause(); isPlaying=false; setPlayIcon(false); }
 }
@@ -2257,11 +2259,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         }));
         songs = songs.sort(() => Math.random() - 0.5);
         window._prefetchedRecommend = songs;
-        // 预取第一首URL，提前set进audio.src（iOS touchstart时直接play，不需要await）
+        // 预取第一首URL，存入缓存（用户切推荐歌单时加载更快），不设audio.src防止覆盖心动歌单
         if (songs.length && !isPlaying) {
           const u = await api('/song/url', { id: songs[0].id, br: 128000 });
           const url = u.data?.[0]?.url;
-          if (url && !isPlaying) { audio.src = url; window._prefetchedSong = songs[0]; }
+          if (url) { _urlCache[songs[0].id] = url; window._prefetchedSong = songs[0]; }
         }
       } catch(_) {}
     })();
