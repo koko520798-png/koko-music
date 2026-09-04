@@ -576,11 +576,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 
 <!-- 音频 -->
 <audio id="audio" preload="none"></audio>
+<!-- 后台预加载下一首：muted+preload=auto，不播放只缓存，让canplay在ended同步上下文里触发 -->
+<audio id="audio-preload" muted preload="auto" style="position:absolute;left:-9999px;top:-9999px;width:0;height:0;pointer-events:none;"></audio>
 
 <script>
 const API = '/api/netease?key=xiaomao520';
 const MUSIC_API = '/api/music?key=xiaomao520';
 const audio = document.getElementById('audio');
+const _preloadAudio = document.getElementById('audio-preload');
+let _preloadSongId = null; // 当前正在预加载的歌曲id
 
 // ===== 页面加载时上报已保存的cookie到VPS，让哥哥的MCP能用 =====
 (function reportSavedCookie() {
@@ -1058,6 +1062,15 @@ async function _prefetchUrl(songId) {
     const url = d.data?.[0]?.url;
     if (url) {
       _urlCache[songId] = url;
+      // ▶ iOS后台自动切歌修复：下一首URL拿到后，立刻用隐藏audio元素开始预缓冲
+      // 这样ended触发时audio.src一换，canplay几乎同步触发，还在iOS可信事件链内
+      if (isPlaying && !_pendingPlay) {
+        const nextIdx = (curIdx + 1) % playlist.length;
+        if (playlist[nextIdx]?.id === songId && _preloadSongId !== songId) {
+          _preloadSongId = songId;
+          _preloadAudio.src = url; // 设src + preload='auto' 自动开始缓冲，不play
+        }
+      }
       // 如果是当前歌且 audio 没在播放，预设 src（不 play）
       // 这样用户点播放时直接在手势里 play()，不需要 async，iOS 拦不住
       if (!isPlaying && !_pendingPlay && playlist[curIdx]?.id === songId) {
@@ -1105,12 +1118,17 @@ function prefetchAll() {
 
 function _doPlay(url, songId) {
   // 同步执行：设 src 并立即 play（必须在手势上下文里或已有缓存URL时调用）
+  // 清掉预加载状态，让 schedulePrefetch 为新的下一首重新预加载
+  if (_preloadSongId === songId) {
+    _preloadSongId = null;
+    _preloadAudio.src = ''; // 释放预加载资源
+  }
   audio.muted = false;
   if (audio.src !== url) audio.src = url; // src 没变就不重设，避免触发 abort
   const pp = audio.play();
   if (pp) pp.catch(err => {
     if (err?.name === 'AbortError') {
-      // 资源还在加载，等 canplay 后重试
+      // 资源还在加载，等 canplay 后重试（预加载使这个等待通常<50ms）
       audio.addEventListener('canplay', function once() {
         audio.removeEventListener('canplay', once);
         audio.play().catch(e2 => { showToast('播放失败: ' + (e2?.name || e2)); isPlaying = false; setPlayIcon(false); });
