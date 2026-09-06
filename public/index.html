@@ -810,6 +810,11 @@ window.addEventListener('message', function(e) {
   }
   // 家里打开音乐overlay时发来：同步UI状态（解决后台切歌后切回来显示不同步）
   if (e.data.action === 'syncUI') {
+    // 先停止预加载audio，防止iOS切回前台时意外让预加载元素出声
+    _preloadAudio.pause();
+    _preloadAudio.src = '';
+    _preloadSongId = null;
+
     if (playlist.length && playlist[curIdx]) {
       updateSongUI(playlist[curIdx]);
       updateFavIcon();
@@ -823,6 +828,8 @@ window.addEventListener('message', function(e) {
     if (isPlaying) {
       if (_rafId) cancelAnimationFrame(_rafId);
       _rafId = requestAnimationFrame(_rafTick);
+      // 重新预加载下一首（之前清了_preloadAudio）
+      schedulePrefetch();
     }
   }
 });
