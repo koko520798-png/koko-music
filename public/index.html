@@ -828,8 +828,6 @@ window.addEventListener('message', function(e) {
     if (isPlaying) {
       if (_rafId) cancelAnimationFrame(_rafId);
       _rafId = requestAnimationFrame(_rafTick);
-      // 重新预加载下一首（之前清了_preloadAudio）
-      schedulePrefetch();
     }
   }
 });
