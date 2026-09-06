@@ -1078,6 +1078,7 @@ function getSilentUrl() { return UNLOCK_SRC; }
 const _urlCache = {};
 let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
 let _audioSrcSongId = null; // 记录当前 audio.src 预设的是哪首歌（schedulePrefetch用）
+let _bgAutoAdvanced = false; // iOS后台自动切歌标记：timeupdate里已切歌，ended不再重复
 
 // iOS后台JS上下文可能被暂停/重置，_urlCache(纯内存)会丢失。
 // 用localStorage做持久化层，ended事件触发时仍能拿到URL。
@@ -1104,6 +1105,18 @@ function _getAndClearCachedUrl(songId) {
     try { localStorage.removeItem('nease_url_' + songId); } catch(e) {}
   }
   return url || null;
+}
+// 只读URL缓存（不消费），用于timeupdate预切换时检查
+function _peekCachedUrl(songId) {
+  if (_urlCache[songId]) return _urlCache[songId];
+  try {
+    const s = localStorage.getItem('nease_url_' + songId);
+    if (s) {
+      const bar = s.lastIndexOf('|');
+      if (Date.now() - parseInt(s.slice(bar + 1)) < _URL_TTL) return s.slice(0, bar);
+    }
+  } catch(e) {}
+  return null;
 }
 
 async function _prefetchUrl(songId) {
@@ -1430,6 +1443,7 @@ function _rafTick() {
 audio.addEventListener('play', () => {
   if (_rafId) cancelAnimationFrame(_rafId);
   _rafId = requestAnimationFrame(_rafTick);
+  _bgAutoAdvanced = false; // 新歌开始播放，重置后台自动切歌标记
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing';
   }
@@ -1444,7 +1458,43 @@ audio.addEventListener('pause', () => {
 });
 audio.addEventListener('ended', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
+  // iOS后台自动切歌：timeupdate已经在歌曲最后0.5s时切换过了，ended不再重复
+  if (_bgAutoAdvanced) { _bgAutoAdvanced = false; return; }
   nextSong();
+});
+// ▶ iOS后台自动切歌核心修复（Bug 3）
+// 根本原因：ended事件发生时audio session已结束，iOS拒绝从后台重启新session，play()被拦截。
+// 解决方案：在歌曲最后0.5s，趁audio session仍活跃时主动切换下一首。
+// timeupdate由audio engine直接驱动（不是RAF），后台播放时持续触发。
+// 此时调用audio.play()属于"切换中的session"，iOS不需要重新授权。
+audio.addEventListener('timeupdate', () => {
+  if (!isPlaying || !audio.duration || audio.duration < 2 || _bgAutoAdvanced) return;
+  if (playMode === 2) return; // 单曲循环：让ended自己重播
+  const remaining = audio.duration - audio.currentTime;
+  if (remaining > 0.5 || remaining <= 0) return; // 未到切换窗口
+
+  const nextIdx = playMode === 1
+    ? Math.floor(Math.random() * playlist.length)
+    : (curIdx + 1) % playlist.length;
+  const ns = playlist[nextIdx];
+  if (!ns) return;
+
+  // 同步获取URL（不能发起异步网络请求，在后台fetch会被iOS拦截）
+  let nextUrl = (_preloadSongId === ns.id && _preloadAudio.src) ? _preloadAudio.src : null;
+  if (!nextUrl) nextUrl = _peekCachedUrl(ns.id);
+  if (!nextUrl) return; // URL没缓存：让ended走普通路径（前台能用，后台可能失败）
+
+  // 标记：已在timeupdate里完成切换，ended来了直接忽略
+  _bgAutoAdvanced = true;
+  pushCurToHistory();
+  curIdx = nextIdx;
+
+  // 更新UI（后台时DOM操作静默，切回前台后会有syncUI同步）
+  updateSongUI(ns);
+  updateFavIcon();
+
+  // 切换播放（_doPlay内部处理preload清理、AbortError重试、schedulePrefetch）
+  _doPlay(nextUrl, ns.id);
 });
 audio.addEventListener('durationchange', () => {
   if ('mediaSession' in navigator && audio.duration && !isNaN(audio.duration)) {
