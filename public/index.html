@@ -1079,13 +1079,52 @@ const _urlCache = {};
 let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
 let _audioSrcSongId = null; // 记录当前 audio.src 预设的是哪首歌（schedulePrefetch用）
 
+// iOS后台JS上下文可能被暂停/重置，_urlCache(纯内存)会丢失。
+// 用localStorage做持久化层，ended事件触发时仍能拿到URL。
+const _URL_TTL = 20 * 60 * 1000; // 20分钟有效期（网易URL约20分钟内有效）
+function _saveCachedUrl(songId, url) {
+  _urlCache[songId] = url;
+  try { localStorage.setItem('nease_url_' + songId, url + '|' + Date.now()); } catch(e) {}
+}
+function _getAndClearCachedUrl(songId) {
+  let url = _urlCache[songId];
+  if (!url) {
+    try {
+      const s = localStorage.getItem('nease_url_' + songId);
+      if (s) {
+        const bar = s.lastIndexOf('|');
+        const ts = parseInt(s.slice(bar + 1));
+        if (Date.now() - ts < _URL_TTL) url = s.slice(0, bar);
+        else localStorage.removeItem('nease_url_' + songId);
+      }
+    } catch(e) {}
+  }
+  if (url) {
+    delete _urlCache[songId];
+    try { localStorage.removeItem('nease_url_' + songId); } catch(e) {}
+  }
+  return url || null;
+}
+
 async function _prefetchUrl(songId) {
-  if (!songId || _urlCache[songId]) return;
+  if (!songId) return;
+  // 内存命中直接返回；localStorage命中时恢复到内存（iOS后台JS重置后恢复路径）
+  if (_urlCache[songId]) return;
+  try {
+    const _ls = localStorage.getItem('nease_url_' + songId);
+    if (_ls) {
+      const _bar = _ls.lastIndexOf('|');
+      if (Date.now() - parseInt(_ls.slice(_bar + 1)) < _URL_TTL) {
+        _urlCache[songId] = _ls.slice(0, _bar); // 恢复到内存
+        return;
+      }
+    }
+  } catch(e) {}
   try {
     const d = await api('/song/url', { id: songId, br: 128000 });
     const url = d.data?.[0]?.url;
     if (url) {
-      _urlCache[songId] = url;
+      _saveCachedUrl(songId, url);
       // ▶ iOS后台自动切歌修复：下一首URL拿到后，立刻用隐藏audio元素开始预缓冲
       // 这样ended触发时audio.src一换，canplay几乎同步触发，还在iOS可信事件链内
       if (isPlaying && !_pendingPlay) {
@@ -1106,6 +1145,7 @@ async function _prefetchUrl(songId) {
       if (_pendingPlay === songId) {
         _pendingPlay = null;
         delete _urlCache[songId];
+        try { localStorage.removeItem('nease_url_' + songId); } catch(e) {}
         audio.src = url;
         audio.muted = false;
         const pp = audio.play();
@@ -1175,10 +1215,10 @@ async function playCur() {
   updateSongUI(song);
   updateFavIcon();
 
-  // ① 优先使用内存缓存（整段在手势同步上下文里，iOS 不会拦）
-  const cached = _urlCache[song.id];
+  // ① 优先使用URL缓存（内存 + localStorage双层，iOS后台JS上下文重置后也能从localStorage恢复）
+  // 整段在手势/ended同步上下文里，iOS 不会拦截 audio.play()
+  const cached = _getAndClearCachedUrl(song.id);
   if (cached) {
-    delete _urlCache[song.id];
     _doPlay(cached, song.id);
     return;
   }
@@ -1189,6 +1229,14 @@ async function playCur() {
     const curSrc = audio.src;
     _audioSrcSongId = null;
     _doPlay(curSrc, song.id);
+    return;
+  }
+
+  // ① ter：_preloadAudio 已经在缓冲这首歌，直接用它已经拿到的URL
+  // 理论上URL已在①里找到，但iOS后台极端情况下_urlCache丢失时，此处兜底
+  if (_preloadSongId === song.id && _preloadAudio.src) {
+    const url = _preloadAudio.src;
+    _doPlay(url, song.id); // _doPlay内部会清掉_preloadSongId和_preloadAudio.src
     return;
   }
 
