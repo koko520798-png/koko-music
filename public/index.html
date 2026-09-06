@@ -814,6 +814,8 @@ window.addEventListener('message', function(e) {
     _preloadAudio.pause();
     _preloadAudio.src = '';
     _preloadSongId = null;
+    // 清掉_pendingPlay：后台iOS可能暂停了网络请求，_prefetchUrl回调恢复时会误触发播放
+    _pendingPlay = null;
 
     if (playlist.length && playlist[curIdx]) {
       updateSongUI(playlist[curIdx]);
