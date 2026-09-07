@@ -1079,6 +1079,7 @@ const _urlCache = {};
 let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
 let _audioSrcSongId = null; // 记录当前 audio.src 预设的是哪首歌（schedulePrefetch用）
 let _bgAutoAdvanced = false; // iOS后台自动切歌标记：timeupdate里已切歌，ended不再重复
+let _nextIdx = -1; // 提前确定的下一首index（随机模式在schedulePrefetch里固定，不在timeupdate里临时随机）
 
 // iOS后台JS上下文可能被暂停/重置，_urlCache(纯内存)会丢失。
 // 用localStorage做持久化层，ended事件触发时仍能拿到URL。
@@ -1179,7 +1180,23 @@ function schedulePrefetch() {
   const len = playlist.length;
   const cur = playlist[curIdx];
   if (cur) _prefetchUrl(cur.id);
-  const next = playlist[(curIdx + 1) % len];
+  // 提前确定下一首（随机模式在这里固定，而不是在timeupdate里每次临时随机）
+  // 这样保证预取的和timeupdate切的是同一首歌，URL缓存命中率100%
+  if (len > 1) {
+    if (playMode === 1) {
+      // 随机模式：随机选一首，避免和当前相同
+      let r = Math.floor(Math.random() * len);
+      if (r === curIdx && len > 1) r = (r + 1) % len;
+      _nextIdx = r;
+    } else if (playMode === 2) {
+      _nextIdx = curIdx; // 单曲循环：下一首还是自己
+    } else {
+      _nextIdx = (curIdx + 1) % len; // 列表循环：顺序下一首
+    }
+  } else {
+    _nextIdx = 0;
+  }
+  const next = playlist[_nextIdx];
   if (next && next.id !== cur?.id) _prefetchUrl(next.id);
 }
 
@@ -1462,39 +1479,48 @@ audio.addEventListener('ended', () => {
   if (_bgAutoAdvanced) { _bgAutoAdvanced = false; return; }
   nextSong();
 });
-// ▶ iOS后台自动切歌核心修复（Bug 3）
+// ▶ iOS后台自动切歌核心修复（Bug 3，v2）
 // 根本原因：ended事件发生时audio session已结束，iOS拒绝从后台重启新session，play()被拦截。
-// 解决方案：在歌曲最后0.5s，趁audio session仍活跃时主动切换下一首。
-// timeupdate由audio engine直接驱动（不是RAF），后台播放时持续触发。
-// 此时调用audio.play()属于"切换中的session"，iOS不需要重新授权。
+// 解决方案：timeupdate监听，两阶段处理：
+//   Phase 1（remaining <= 3s）：URL还没缓存时立即触发紧急预取（给网络最多2.5秒时间）
+//   Phase 2（remaining <= 0.5s）：正式切换（此时URL通常已就绪，audio session还活跃）
+// _nextIdx在schedulePrefetch里提前固定（随机模式也一样），保证预取的和切换的是同一首。
 audio.addEventListener('timeupdate', () => {
   if (!isPlaying || !audio.duration || audio.duration < 2 || _bgAutoAdvanced) return;
   if (playMode === 2) return; // 单曲循环：让ended自己重播
   const remaining = audio.duration - audio.currentTime;
-  if (remaining > 0.5 || remaining <= 0) return; // 未到切换窗口
+  if (remaining <= 0 || remaining > 3) return; // 3秒内开始处理
 
-  const nextIdx = playMode === 1
-    ? Math.floor(Math.random() * playlist.length)
-    : (curIdx + 1) % playlist.length;
+  // 用提前确定的_nextIdx（随机模式在schedulePrefetch里已固定，保证和预取一致）
+  const nextIdx = (_nextIdx >= 0 && _nextIdx < playlist.length) ? _nextIdx : (curIdx + 1) % playlist.length;
   const ns = playlist[nextIdx];
   if (!ns) return;
 
-  // 同步获取URL（不能发起异步网络请求，在后台fetch会被iOS拦截）
-  let nextUrl = (_preloadSongId === ns.id && _preloadAudio.src) ? _preloadAudio.src : null;
-  if (!nextUrl) nextUrl = _peekCachedUrl(ns.id);
-  if (!nextUrl) return; // URL没缓存：让ended走普通路径（前台能用，后台可能失败）
+  const preloaded = (_preloadSongId === ns.id && _preloadAudio.src);
+  const cached = preloaded ? _preloadAudio.src : _peekCachedUrl(ns.id);
+
+  // Phase 1（3s~0.5s）：URL还没缓存时触发紧急预取，为Phase 2争取时间
+  if (!cached && remaining > 0.5) {
+    _prefetchUrl(ns.id); // 幂等：已在飞则不重复发请求
+    return;
+  }
+
+  // Phase 2（remaining <= 0.5s）：正式切换
+  if (remaining > 0.5) return;
+  if (!cached) return; // 0.5s到了但URL还是没缓存：只能放弃，让ended走（可能失败）
 
   // 标记：已在timeupdate里完成切换，ended来了直接忽略
   _bgAutoAdvanced = true;
   pushCurToHistory();
   curIdx = nextIdx;
+  _nextIdx = -1; // 重置，等新歌的schedulePrefetch重新计算
 
   // 更新UI（后台时DOM操作静默，切回前台后会有syncUI同步）
   updateSongUI(ns);
   updateFavIcon();
 
   // 切换播放（_doPlay内部处理preload清理、AbortError重试、schedulePrefetch）
-  _doPlay(nextUrl, ns.id);
+  _doPlay(cached, ns.id);
 });
 audio.addEventListener('durationchange', () => {
   if ('mediaSession' in navigator && audio.duration && !isNaN(audio.duration)) {
