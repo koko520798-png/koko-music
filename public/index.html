@@ -1140,10 +1140,11 @@ async function _prefetchUrl(songId) {
     if (url) {
       _saveCachedUrl(songId, url);
       // ▶ iOS后台自动切歌修复：下一首URL拿到后，立刻用隐藏audio元素开始预缓冲
-      // 这样ended触发时audio.src一换，canplay几乎同步触发，还在iOS可信事件链内
+      // 这样timeupdate里切歌时直接用_preloadAudio.src，不需要再等网络
+      // 用_nextIdx而非curIdx+1，保证随机模式下也能命中正确的下一首
       if (isPlaying && !_pendingPlay) {
-        const nextIdx = (curIdx + 1) % playlist.length;
-        if (playlist[nextIdx]?.id === songId && _preloadSongId !== songId) {
+        const nextCheckIdx = (_nextIdx >= 0 && _nextIdx < playlist.length) ? _nextIdx : (curIdx + 1) % playlist.length;
+        if (playlist[nextCheckIdx]?.id === songId && _preloadSongId !== songId) {
           _preloadSongId = songId;
           _preloadAudio.src = url; // 设src + preload='auto' 自动开始缓冲，不play
         }
