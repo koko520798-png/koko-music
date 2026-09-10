@@ -1491,6 +1491,31 @@ audio.addEventListener('ended', () => {
   if (_bgAutoAdvanced) { _bgAutoAdvanced = false; return; }
   nextSong();
 });
+
+// ▶ visibilitychange：iOS解冻页面时强制从audio元素同步状态
+// 别人怎么做：以audio.paused为准，不信任JS变量；重启RAF；重取歌词
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  // 1. 从audio元素同步isPlaying（iOS解冻后audio状态才是真实的）
+  const actuallyPlaying = !audio.paused && audio.src && audio.readyState >= 2;
+  if (isPlaying !== actuallyPlaying) {
+    isPlaying = actuallyPlaying;
+    setPlayIcon(isPlaying);
+  }
+  // 2. 无条件重启RAF（iOS后台会throttle RAF，解冻后必须重启）
+  if (_rafId) cancelAnimationFrame(_rafId);
+  _rafId = requestAnimationFrame(_rafTick);
+  // 3. 强制更新UI（封面/歌名/歌手——防止后台切歌后UI没跟上）
+  if (playlist.length && playlist[curIdx]) {
+    updateSongUI(playlist[curIdx]);
+    updateFavIcon();
+    setPlayIcon(isPlaying);
+    // 4. 歌词为空时重取（后台loadLyric可能被iOS throttle导致没拿到数据）
+    if (!lyricLines.length) {
+      loadLyric(playlist[curIdx].id);
+    }
+  }
+});
 // ▶ iOS后台自动切歌核心修复（Bug 3，v2）
 // 根本原因：ended事件发生时audio session已结束，iOS拒绝从后台重启新session，play()被拦截。
 // 解决方案：timeupdate监听，两阶段处理：
