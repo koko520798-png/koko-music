@@ -827,6 +827,8 @@ window.addEventListener('message', function(e) {
     _preloadSongId = null;
     // 清掉_pendingPlay：后台iOS可能暂停了网络请求，_prefetchUrl回调恢复时会误触发播放
     _pendingPlay = null;
+    // 切回前台：重置后台切歌标记，防止 _bgAutoAdvanced 卡在 true 导致 timeupdate 永远跳过
+    _bgAutoAdvanced = false;
     // 如果主audio正在播放unlock.wav（_pendingPlay等待状态），清掉它
     // 防止unlock.wav稍后ended触发nextSong()跳到下下首
     if (audio.src && (audio.src.endsWith('/unlock.wav') || audio.src === UNLOCK_SRC)) {
@@ -1100,6 +1102,7 @@ const _urlCache = {};
 let _pendingPlay = null; // 等待预取完成后自动播放的歌曲id
 let _audioSrcSongId = null; // 记录当前 audio.src 预设的是哪首歌（schedulePrefetch用）
 let _bgAutoAdvanced = false; // iOS后台自动切歌标记：timeupdate里已切歌，ended不再重复
+let _doPlayTs = 0; // 记录最近一次 _doPlay 调用时间（用于排除换src触发的stale ended）
 let _nextIdx = -1; // 提前确定的下一首index（随机模式在schedulePrefetch里固定，不在timeupdate里临时随机）
 
 // iOS后台JS上下文可能被暂停/重置，_urlCache(纯内存)会丢失。
@@ -1248,6 +1251,7 @@ function prefetchAll() {
 function _doPlay(url, songId) {
   // 同步执行：设 src 并立即 play（必须在手势上下文里或已有缓存URL时调用）
   // 清掉预加载状态，让 schedulePrefetch 为新的下一首重新预加载
+  _doPlayTs = Date.now(); // 记录调用时间，供 ended 排除 stale 事件用
   if (_preloadSongId === songId) {
     _preloadSongId = null;
     _preloadAudio.src = ''; // 释放预加载资源
@@ -1497,7 +1501,10 @@ function _rafTick() {
 audio.addEventListener('play', () => {
   if (_rafId) cancelAnimationFrame(_rafId);
   _rafId = requestAnimationFrame(_rafTick);
-  _bgAutoAdvanced = false; // 新歌开始播放，重置后台自动切歌标记
+  // ⚠️ 不在 play 事件里重置 _bgAutoAdvanced！
+  // play 事件在 audio.play() 调用后立刻同步触发，但 iOS stale ended（换 src 引发）
+  // 可能在 play 之后才从事件队列出来——如果这里重置了，ended 就绕过了保护。
+  // 改为在 timeupdate 里等新歌 currentTime > 0.1s 后再重置（确保 stale ended 已过）。
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing';
   }
@@ -1515,9 +1522,11 @@ audio.addEventListener('ended', () => {
   // iOS后台自动切歌：timeupdate已经在歌曲最后0.5s时切换过了，ended不再重复
   if (_bgAutoAdvanced) { _bgAutoAdvanced = false; return; }
   // unlock.wav (~0.45s)结束时不跳歌：此时正在等待真实URL的_prefetchUrl回调
-  // 如果_pendingPlay有值，说明我们处于"激活audio session等待URL"的中间状态
-  // 让_prefetchUrl回调完成后自动播放，不要在这里额外跳到下一首导致两首同时播
   if (_pendingPlay) return;
+  // 第二道防线：_doPlay 在 300ms 内调用过，说明刚换了 src
+  // iOS 换 src 时可能附带触发旧媒体的 ended 事件（stale ended），需要忽略
+  // 这是 _bgAutoAdvanced 保护被 play 事件提前重置后的兜底
+  if (Date.now() - _doPlayTs < 300) return;
   nextSong();
 });
 
@@ -1552,6 +1561,11 @@ document.addEventListener('visibilitychange', () => {
 //   Phase 2（remaining <= 0.5s）：正式切换（此时URL通常已就绪，audio session还活跃）
 // _nextIdx在schedulePrefetch里提前固定（随机模式也一样），保证预取的和切换的是同一首。
 audio.addEventListener('timeupdate', () => {
+  // 新歌有实际进度后，安全重置 _bgAutoAdvanced
+  // 放在最前面，确保在 return 之前执行（否则 _bgAutoAdvanced=true 时 timeupdate 永远跳过）
+  if (_bgAutoAdvanced && audio.currentTime > 0.1) {
+    _bgAutoAdvanced = false;
+  }
   if (!isPlaying || !audio.duration || audio.duration < 2 || _bgAutoAdvanced) return;
   if (playMode === 2) return; // 单曲循环：让ended自己重播
   const remaining = audio.duration - audio.currentTime;
