@@ -832,6 +832,17 @@ window.addEventListener('message', function(e) {
       _rafId = requestAnimationFrame(_rafTick);
     }
   }
+  // 家里问当前播放状态（进度条组件用）
+  if (e.data.action === 'getState') {
+    var cur = audio ? audio.currentTime : 0;
+    var dur = audio ? (audio.duration || 0) : 0;
+    var pct = dur > 0 ? (cur / dur * 100) : 0;
+    try { e.source.postMessage({action:'musicState', pct: pct, playing: isPlaying, dur: dur, cur: cur}, '*'); } catch(_) {}
+  }
+  // 家里拖动进度条来seek
+  if (e.data.action === 'seekTo') {
+    if (audio && audio.duration) audio.currentTime = e.data.pct * audio.duration;
+  }
 });
 
 // 启动时：通知家里"我准备好了"，请求家里发cookie过来；同时把自己已有的cookie也发给家里存
