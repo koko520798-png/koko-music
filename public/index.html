@@ -794,6 +794,7 @@ let playMode = 1; // 0=循环 1=随机
 let lyricLines = [];
 let lyricTimers = [];
 let qrTimer = null;
+let _loadedLyricId = null; // 已加载歌词的歌曲id，防止同一首歌重复请求
 
 // 初始化时启动RAF（不等syncUI）——iframe重载后playlist已恢复，进度条应立刻跑起来
 if (playlist.length) {
@@ -836,11 +837,20 @@ window.addEventListener('message', function(e) {
       audio.src = '';
     }
 
-    // 从audio元素实际状态同步isPlaying（不信任后台可能已失效的JS变量）
-    const _actuallyPlaying = !audio.paused && audio.src && audio.readyState >= 2;
-    if (isPlaying !== _actuallyPlaying) {
-      isPlaying = _actuallyPlaying;
+    // 从audio元素同步isPlaying
+    // ⚠️ iOS后台时overlay遮住iframe，audio.paused可能为true（系统挂起）
+    // 这不代表用户暂停了——如果有真实src但被挂起，尝试恢复播放（不改isPlaying）
+    // 只有src为空或unlock.wav时才强制设为false
+    const _srcIsReal = audio.src && !audio.src.endsWith('/unlock.wav') && audio.src !== UNLOCK_SRC;
+    if (!_srcIsReal) {
+      isPlaying = false; // src为空或unlock.wav，真的没在播
+    } else if (!audio.paused) {
+      isPlaying = true; // 确实在播，同步
+    } else if (isPlaying) {
+      // isPlaying=true但audio.paused（iOS挂起）：尝试恢复，不立刻改isPlaying
+      audio.play().catch(() => { isPlaying = false; setPlayIcon(false); });
     }
+    // isPlaying=false且audio.paused：用户主动暂停，保持不变
 
     if (playlist.length && playlist[curIdx]) {
       updateSongUI(playlist[curIdx]);
@@ -1360,6 +1370,10 @@ function updateSongUI(song) {
 }
 
 async function loadLyric(id) {
+  // 同一首歌且已有歌词，直接返回（防止回来后重复请求清空歌词导致闪烁）
+  if (id === _loadedLyricId && lyricLines.length > 0) return;
+  _loadedLyricId = id;
+  lyricLines = []; // 重置歌词数组（切歌时清空）
   document.getElementById('lyric-prev').textContent = '　';
   document.getElementById('lyric-cur').textContent  = '🎵';
   document.getElementById('lyric-next').textContent = '　';
