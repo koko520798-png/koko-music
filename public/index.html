@@ -827,6 +827,18 @@ window.addEventListener('message', function(e) {
     _preloadSongId = null;
     // 清掉_pendingPlay：后台iOS可能暂停了网络请求，_prefetchUrl回调恢复时会误触发播放
     _pendingPlay = null;
+    // 如果主audio正在播放unlock.wav（_pendingPlay等待状态），清掉它
+    // 防止unlock.wav稍后ended触发nextSong()跳到下下首
+    if (audio.src && (audio.src.endsWith('/unlock.wav') || audio.src === UNLOCK_SRC)) {
+      audio.pause();
+      audio.src = '';
+    }
+
+    // 从audio元素实际状态同步isPlaying（不信任后台可能已失效的JS变量）
+    const _actuallyPlaying = !audio.paused && audio.src && audio.readyState >= 2;
+    if (isPlaying !== _actuallyPlaying) {
+      isPlaying = _actuallyPlaying;
+    }
 
     if (playlist.length && playlist[curIdx]) {
       updateSongUI(playlist[curIdx]);
@@ -838,8 +850,6 @@ window.addEventListener('message', function(e) {
       loadLyric(playlist[curIdx].id);
     }
     // 重启进度条RAF（iOS在hidden iframe里会throttle RAF，切回来需要重启）
-    // 不管isPlaying状态，只要切回来就无条件重启RAF——
-    // 因为iOS后台可能把audio暂停了导致isPlaying=false，但用户想看到歌词和进度条仍然刷新
     if (_rafId) cancelAnimationFrame(_rafId);
     _rafId = requestAnimationFrame(_rafTick);
   }
@@ -1172,6 +1182,7 @@ async function _prefetchUrl(songId) {
         _pendingPlay = null;
         delete _urlCache[songId];
         try { localStorage.removeItem('nease_url_' + songId); } catch(e) {}
+        audio.pause(); // 先停掉unlock.wav，防止切换时两首overlap
         audio.src = url;
         audio.muted = false;
         const pp = audio.play();
@@ -1184,8 +1195,20 @@ async function _prefetchUrl(songId) {
         localStorage.setItem('nease_curIdx', curIdx);
         schedulePrefetch();
       }
+    } else {
+      // URL获取失败：清掉_pendingPlay防止永远卡在unlock.wav状态
+      if (_pendingPlay === songId) {
+        _pendingPlay = null;
+        isPlaying = false; setPlayIcon(false);
+      }
     }
-  } catch(e) {}
+  } catch(e) {
+    // 网络异常：同样清掉_pendingPlay
+    if (_pendingPlay === songId) {
+      _pendingPlay = null;
+      isPlaying = false; setPlayIcon(false);
+    }
+  }
 }
 function schedulePrefetch() {
   if (!playlist.length) return;
@@ -1229,6 +1252,8 @@ function _doPlay(url, songId) {
     _preloadSongId = null;
     _preloadAudio.src = ''; // 释放预加载资源
   }
+  // 先pause再换src：防止旧audio缓冲区still-draining导致两首同时响
+  if (audio.src !== url) audio.pause();
   audio.muted = false;
   if (audio.src !== url) audio.src = url; // src 没变就不重设，避免触发 abort
   const pp = audio.play();
@@ -1489,6 +1514,10 @@ audio.addEventListener('ended', () => {
   if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
   // iOS后台自动切歌：timeupdate已经在歌曲最后0.5s时切换过了，ended不再重复
   if (_bgAutoAdvanced) { _bgAutoAdvanced = false; return; }
+  // unlock.wav (~0.45s)结束时不跳歌：此时正在等待真实URL的_prefetchUrl回调
+  // 如果_pendingPlay有值，说明我们处于"激活audio session等待URL"的中间状态
+  // 让_prefetchUrl回调完成后自动播放，不要在这里额外跳到下一首导致两首同时播
+  if (_pendingPlay) return;
   nextSong();
 });
 
