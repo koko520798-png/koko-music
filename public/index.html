@@ -827,10 +827,10 @@ window.addEventListener('message', function(e) {
       loadLyric(playlist[curIdx].id);
     }
     // 重启进度条RAF（iOS在hidden iframe里会throttle RAF，切回来需要重启）
-    if (isPlaying) {
-      if (_rafId) cancelAnimationFrame(_rafId);
-      _rafId = requestAnimationFrame(_rafTick);
-    }
+    // 不管isPlaying状态，只要切回来就无条件重启RAF——
+    // 因为iOS后台可能把audio暂停了导致isPlaying=false，但用户想看到歌词和进度条仍然刷新
+    if (_rafId) cancelAnimationFrame(_rafId);
+    _rafId = requestAnimationFrame(_rafTick);
   }
 });
 
