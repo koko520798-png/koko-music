@@ -762,6 +762,9 @@ if (playlist.length) {
   renderPlaylist();
   updateSongUI(playlist[curIdx] || playlist[0]);
   prefetchAll();
+  // 初始化时也加载歌词，防止syncUI在iframe未准备好时丢失消息导致歌词一直显示占位文字
+  // （iframe重载后playlist从localStorage恢复，但歌词需要异步获取）
+  setTimeout(() => loadLyric((playlist[curIdx] || playlist[0]).id), 0);
 }
 // 如果playlist为空，先从本地 heart/koko 缓存恢复（0秒，立刻有歌）
 if (!playlist.length) {
@@ -791,6 +794,14 @@ let playMode = 1; // 0=循环 1=随机
 let lyricLines = [];
 let lyricTimers = [];
 let qrTimer = null;
+
+// 初始化时启动RAF（不等syncUI）——iframe重载后playlist已恢复，进度条应立刻跑起来
+if (playlist.length) {
+  setTimeout(() => {
+    if (_rafId) cancelAnimationFrame(_rafId);
+    _rafId = requestAnimationFrame(_rafTick);
+  }, 100);
+}
 
 // 接收家里传来的登录状态（解决iOS iframe localStorage隔离问题）
 window.addEventListener('message', function(e) {
