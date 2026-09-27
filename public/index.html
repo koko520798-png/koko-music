@@ -804,7 +804,7 @@ if (playlist.length) {
   }, 100);
 }
 
-// 家里🎵弹窗的"推荐"：心动模式，每次从「我喜欢的音乐」随机抽一首当起点，所以每次打开都不一样
+// "推荐"（家里🎵弹窗 + koko音乐的推荐tab）：心动模式，每次从「我喜欢的音乐」随机抽一首当起点，所以每次打开都不一样
 // 心动模式拿不到（没登录/没有喜欢的歌/接口失败）就退回每日推荐
 function _homeMap(s) {
   return { id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' };
@@ -1948,14 +1948,12 @@ async function switchPlayTab(tab) {
       songs = (d2.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||'' }));
       saveHeartCache(songs); // 存本地缓存
     } else if (tab === 'recommend') {
-      if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看每日推荐</li>'; return; }
+      if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看推荐</li>'; return; }
       if (window._prefetchedRecommend) {
         songs = window._prefetchedRecommend;
         window._prefetchedRecommend = null;
       } else {
-        const d = await api('/recommend/songs');
-        songs = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
-        songs = songs.sort(() => Math.random() - 0.5);
+        songs = await homeHeartbeatSongs();
       }
     } else if (tab === 'koko') {
       if (!cookie) { el.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text2);font-size:13px;list-style:none">登录后查看</li>'; return; }
@@ -2574,13 +2572,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 后台预加载推荐 + 预取第一首URL（同时解决iOS解锁和推荐自动填充）
     (async () => {
       try {
-        const d = await api('/recommend/songs');
-        let songs = (d.data?.dailySongs||[]).map(s => ({
-          id:s.id, name:s.name,
-          artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'),
-          cover:s.al?.picUrl||s.album?.picUrl||''
-        }));
-        songs = songs.sort(() => Math.random() - 0.5);
+        const songs = await homeHeartbeatSongs();
         window._prefetchedRecommend = songs;
         // 预取第一首URL，存入缓存（用户切推荐歌单时加载更快），不设audio.src防止覆盖心动歌单
         if (songs.length && !isPlaying) {
