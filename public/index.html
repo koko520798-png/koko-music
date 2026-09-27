@@ -804,6 +804,37 @@ if (playlist.length) {
   }, 100);
 }
 
+// 家里🎵弹窗的"推荐"：心动模式，每次从「我喜欢的音乐」随机抽一首当起点，所以每次打开都不一样
+// 心动模式拿不到（没登录/没有喜欢的歌/接口失败）就退回每日推荐
+function _homeMap(s) {
+  return { id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' };
+}
+async function homeHeartbeatSongs() {
+  try {
+    if (cookie) {
+      if (!userInfo?.userId) await fetchUserInfo();
+      const uid = userInfo?.userId;
+      if (uid) {
+        if (!window._myPlaylists) {
+          const d = await api('/user/playlist', { uid, limit: 30 });
+          window._myPlaylists = d.playlist || [];
+        }
+        const likedPl = window._myPlaylists.find(p => p.specialType === 5) || window._myPlaylists[0];
+        if (!likedSongIds.size) await loadLikedSongs();
+        const ids = [...likedSongIds];
+        if (likedPl && ids.length) {
+          const seed = ids[Math.floor(Math.random() * ids.length)];
+          const d = await api('/playmode/intelligence/list', { id: seed, pid: likedPl.id, sid: seed, timestamp: Date.now() });
+          const songs = (d.data || []).map(x => x.songInfo).filter(Boolean).map(_homeMap);
+          if (songs.length) return songs;
+        }
+      }
+    }
+  } catch (_) {}
+  const d = await api('/recommend/songs');
+  return (d.data?.dailySongs || []).map(_homeMap);
+}
+
 // 接收家里传来的登录状态（解决iOS iframe localStorage隔离问题）
 window.addEventListener('message', function(e) {
   if (!e.data) return;
@@ -832,11 +863,8 @@ window.addEventListener('message', function(e) {
   if (e.source === window.parent && e.data.action === 'homeGetRecommend') {
     (async () => {
       try {
-        if (!window._homeRecommend) {
-          const d = await api('/recommend/songs');
-          window._homeRecommend = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
-        }
-        e.source.postMessage({action:'homeSongs', kind:'recommend', songs:window._homeRecommend, loggedIn:!!cookie}, e.origin);
+        const songs = await homeHeartbeatSongs();
+        e.source.postMessage({action:'homeSongs', kind:'recommend', songs, loggedIn:!!cookie}, e.origin);
       } catch (_) {
         e.source.postMessage({action:'homeSongs', kind:'recommend', songs:[], error:true, loggedIn:!!cookie}, e.origin);
       }
