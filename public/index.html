@@ -816,6 +816,18 @@ window.addEventListener('message', function(e) {
       try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
     }
   }
+  // 家里主页音乐卡片的进度条：每秒问一次进度，点进度条跳转
+  if (e.source === window.parent && e.data.action === 'getState') {
+    const d = audio.duration;
+    const isUnlock = audio.src && (audio.src.endsWith('/unlock.wav') || audio.src === UNLOCK_SRC);
+    const pct = (!isUnlock && d && isFinite(d)) ? Math.min(100, audio.currentTime / d * 100) : 0;
+    e.source.postMessage({action:'musicState', pct, playing: !audio.paused}, e.origin);
+  }
+  if (e.source === window.parent && e.data.action === 'seekTo') {
+    const d = audio.duration;
+    const p = Number(e.data.pct);
+    if (d && isFinite(d) && p >= 0 && p <= 1) audio.currentTime = d * p;
+  }
   // 家里主页🎵小弹窗：拿推荐 / 搜歌 / 直接播放（只认父页面发来的）
   if (e.source === window.parent && e.data.action === 'homeGetRecommend') {
     (async () => {
