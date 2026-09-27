@@ -816,6 +816,43 @@ window.addEventListener('message', function(e) {
       try { userInfo = JSON.parse(e.data.user); localStorage.setItem('nease_user', e.data.user); } catch(_) {}
     }
   }
+  // 家里主页🎵小弹窗：拿推荐 / 搜歌 / 直接播放（只认父页面发来的）
+  if (e.source === window.parent && e.data.action === 'homeGetRecommend') {
+    (async () => {
+      try {
+        if (!window._homeRecommend) {
+          const d = await api('/recommend/songs');
+          window._homeRecommend = (d.data?.dailySongs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
+        }
+        e.source.postMessage({action:'homeSongs', kind:'recommend', songs:window._homeRecommend, loggedIn:!!cookie}, e.origin);
+      } catch (_) {
+        e.source.postMessage({action:'homeSongs', kind:'recommend', songs:[], error:true, loggedIn:!!cookie}, e.origin);
+      }
+    })();
+  }
+  if (e.source === window.parent && e.data.action === 'homeSearch') {
+    const q = String(e.data.q || '').trim();
+    (async () => {
+      try {
+        const d = await api('/cloudsearch', { keywords: q, limit: 30 });
+        const songs = (d.result?.songs||[]).map(s => ({ id:s.id, name:s.name, artist:(s.ar||s.artists||[]).map(a=>a.name).join('/'), cover:s.al?.picUrl||s.album?.picUrl||'' }));
+        e.source.postMessage({action:'homeSongs', kind:'search', q, songs}, e.origin);
+      } catch (_) {
+        e.source.postMessage({action:'homeSongs', kind:'search', q, songs:[], error:true}, e.origin);
+      }
+    })();
+  }
+  if (e.source === window.parent && e.data.action === 'homePlay') {
+    const songs = Array.isArray(e.data.songs) ? e.data.songs : [];
+    const idx = Number(e.data.idx) || 0;
+    if (songs.length && songs[idx]) {
+      pushCurToHistory();
+      playlist = songs.map(s => ({ id:s.id, name:s.name, artist:s.artist, cover:s.cover }));
+      curIdx = idx;
+      savePlaylist();
+      playCur();
+    }
+  }
   // 家里发来壁纸，直接应用（跟随家里，不存到本地，下次打开家里会再发一次）
   if (e.data.action === 'setWallpaper') {
     _applyWallpaper(e.data.dataUrl || null);
