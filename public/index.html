@@ -70,16 +70,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .song-artist{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 /* 各档位 */
 /* far-prev/far-next：整体不透明(opacity在cover-item上去掉)，用cover-inner虚化图片，cover-wrap不透明背景遮挡后面的卡片 */
-.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-130px) scale(.52);z-index:1}
-.cover-item.far-next{transform:translate(-50%,-50%) translateX(130px) scale(.52);z-index:1}
+.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-150px) perspective(600px) rotateY(38deg) scale(.66);z-index:1} /* 11.6 她：两边放大一点（比中间小）、向内倾斜 */
+.cover-item.far-next{transform:translate(-50%,-50%) translateX(150px) perspective(600px) rotateY(-38deg) scale(.66);z-index:1}
 .cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:150px;height:auto;padding:7px 7px 36px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.12);background:rgb(252,232,237)}
 .cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.45}
 /* prev/next：实一点，背景不透明，有层级感 */
-.cover-item.prev{transform:translate(-50%,-50%) translateX(-80px) scale(.70);z-index:2}
-.cover-item.next{transform:translate(-50%,-50%) translateX(80px) scale(.70);z-index:2}
+.cover-item.prev{transform:translate(-50%,-50%) translateX(-98px) perspective(600px) rotateY(30deg) scale(.84);z-index:2}
+.cover-item.next{transform:translate(-50%,-50%) translateX(98px) perspective(600px) rotateY(-30deg) scale(.84);z-index:2}
 .cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:150px;height:auto;padding:7px 7px 44px;border-radius:20px;box-shadow:0 5px 16px rgba(0,0,0,.15);background:rgb(252,232,237)}
 .cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.88}
-.cover-item.center{transform:translate(-50%,-50%) translateX(0) scale(1);opacity:1;z-index:5}
+.cover-item.center{transform:translate(-50%,-50%) translateX(0) perspective(600px) rotateY(0deg) scale(1);opacity:1;z-index:5}
 .cover-item.center .cover-wrap{width:150px;height:auto;padding:7px 7px 14px;border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
 .cover-item.center .cover-inner{width:136px;height:136px;border-radius:16px}
 /* 歌词3行（小字） */
