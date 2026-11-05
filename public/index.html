@@ -346,6 +346,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .dress-avatar-cur{width:64px;height:64px;border-radius:50%;overflow:hidden;background:rgba(242,168,192,.3);border:2px solid rgba(242,168,192,.5)}
 .dress-avatar-cur img{width:100%;height:100%;object-fit:cover}
 .dress-change-btn{padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:none;font-size:13px;color:var(--text);cursor:pointer}
+
+/* 11.6 她：音乐里圈的四块（顶栏、封面卡、播放条那一行、底下播放/搜索/我的）换成真液态玻璃，先用清透看看。
+   koko♡kai App run 126 打开了 WebKit 私有开关 useSystemAppearance，网页能用 -apple-visual-effect 画真玻璃；别的地方不认就照原样 */
+@supports (-apple-visual-effect: -apple-system-glass-material-clear){
+  .top-nav-capsule,.cover-wrap,.controls-capsule,.play-tab-bar,.tab-bar{
+    background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+    box-shadow:none!important;border-color:transparent!important;
+    -apple-visual-effect:-apple-system-glass-material-clear;}
+}
 </style>
 </head>
 <body>
