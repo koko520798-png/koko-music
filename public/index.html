@@ -70,8 +70,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .song-artist{font-size:10px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 /* 各档位 */
 /* far-prev/far-next：整体不透明(opacity在cover-item上去掉)，用cover-inner虚化图片，cover-wrap不透明背景遮挡后面的卡片 */
-.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-160px) perspective(600px) rotateY(28deg) scale(.6);z-index:1} /* 11.6 她：两边放大一点（比中间小）、向内倾斜 */
-.cover-item.far-next{transform:translate(-50%,-50%) translateX(160px) perspective(600px) rotateY(-28deg) scale(.6);z-index:1}
+.cover-item.far-prev{transform:translate(-50%,-50%) translateX(-146px) perspective(600px) rotateY(28deg) scale(.6);z-index:1} /* 11.6 她：两边放大一点（比中间小）、向内倾斜 */
+.cover-item.far-next{transform:translate(-50%,-50%) translateX(146px) perspective(600px) rotateY(-28deg) scale(.6);z-index:1}
 .cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:150px;height:auto;padding:7px 7px 30px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.12);background:rgb(252,232,237)}
 .cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.45}
 /* prev/next：实一点，背景不透明，有层级感 */
@@ -347,10 +347,31 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .dress-avatar-cur img{width:100%;height:100%;object-fit:cover}
 .dress-change-btn{padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:none;font-size:13px;color:var(--text);cursor:pointer}
 
+/* 11.6 iOS 音乐那种小框：第一行歌词（粗），第二行 歌名 — 歌手，再下面 时间 进度条 剩余，最下一排 ♡ ⏮ ⏯ ⏭ ☰ */
+.ios-np{margin:4px 22px 0;padding:12px 16px 10px;border-radius:24px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);box-shadow:0 2px 14px rgba(0,0,0,.08);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.np-top{display:flex;align-items:center;gap:8px}
+.np-top .koko-btn{flex:none}
+.np-text{flex:1;min-width:0;text-align:center}
+.ios-np .lyric-line.active{font-size:15px;font-weight:700;color:var(--text);opacity:1;filter:none;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.np-sub{font-size:12.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.np-wave{flex:none;width:22px;height:22px;fill:none;stroke:var(--text2);stroke-width:1.6;stroke-linecap:round;opacity:.55}
+.np-prog{display:flex;align-items:center;gap:9px}
+.np-prog .progress-bar{flex:1;height:5px;border-radius:3px}
+.np-prog .progress-fill{border-radius:3px}
+.np-prog .progress-dot{display:none}
+.np-time{font-size:11.5px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;min-width:34px}
+.np-time:last-child{text-align:right}
+.np-ctrl{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.np-ctrl .ctrl-btn svg{width:22px;height:22px}
+.np-ctrl .skip-btn svg{width:28px;height:28px}
+.np-ctrl .play-btn svg{width:34px;height:34px}
+.np-ctrl .fav-circle{width:auto;height:auto}
+.np-ctrl .fav-circle svg{width:22px;height:22px}
+
 /* 11.6 她：音乐里圈的四块（顶栏、封面卡、播放条那一行、底下播放/搜索/我的）换成真液态玻璃，先用清透看看。
    koko♡kai App run 126 打开了 WebKit 私有开关 useSystemAppearance，网页能用 -apple-visual-effect 画真玻璃；别的地方不认就照原样 */
 @supports (-apple-visual-effect: -apple-system-glass-material-clear){
-  .top-nav-capsule,.cover-wrap,.controls-capsule,.play-tab-bar,.tab-bar{
+  .top-nav-capsule,.cover-wrap,.ios-np,.play-tab-bar,.tab-bar{
     background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
     box-shadow:none!important;border-color:transparent!important;
     -apple-visual-effect:-apple-system-glass-material-clear;}
@@ -408,16 +429,36 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
         </div>
       </div>
     </div>
-    <!-- 歌词 3行 -->
-    <div class="lyrics" id="lyrics">
-      <div class="lyric-line" id="lyric-prev">　</div>
-      <div class="lyric-line active" id="lyric-cur">打开歌单，开始听歌</div>
-      <div class="lyric-line" id="lyric-next">　</div>
-    </div>
-    <!-- 控制胶囊 -->
-    <div class="controls-capsule">
-      <div class="ctrl-left">
-        <!-- 上一首：返回上一首听过的歌（历史记录） -->
+    <!-- 11.6 她：歌词和进度条换成 iOS 音乐那种小框（第一行放歌词） -->
+    <div class="ios-np" id="iosNp">
+      <div class="np-top">
+        <button class="ctrl-btn koko-btn" id="kokoBtn" onclick="toggleKoko()">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8"/>
+            <line x1="12" y1="9" x2="12" y2="15"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+          </svg>
+        </button>
+        <div class="np-text">
+          <div class="lyric-line active" id="lyric-cur">打开歌单，开始听歌</div>
+          <div class="np-sub" id="npSub">未在播放</div>
+        </div>
+        <svg class="np-wave" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h1M6.5 9.5v5M10 6v12M13.5 8.5v7M17 10v4M20.5 11.5v1"/></svg>
+      </div>
+      <div class="lyric-line" id="lyric-prev" hidden>　</div>
+      <div class="lyric-line" id="lyric-next" hidden>　</div>
+      <div class="np-prog">
+        <span class="np-time" id="npCur">0:00</span>
+        <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+          <div class="progress-dot" style="left:0%"></div>
+        </div>
+        <span class="np-time" id="npLeft">-0:00</span>
+      </div>
+      <div class="np-ctrl">
+        <button class="ctrl-btn fav-circle" onclick="toggleFav()" id="favBtn">
+          <svg id="favIcon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
         <button class="ctrl-btn skip-btn" onclick="prevSong()">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <rect x="6" y="5.5" width="2.5" height="13" rx="1.25"/>
@@ -429,30 +470,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
             <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
           </svg>
         </button>
-        <!-- 下一首：skip_next样式（三角+竖线） -->
         <button class="ctrl-btn skip-btn" onclick="nextSong()">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M14.5 12L6 17.5V6.5z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
             <rect x="15.5" y="5.5" width="2.5" height="13" rx="1.25"/>
           </svg>
         </button>
-      </div>
-      <div class="ctrl-mid">
-        <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
-          <div class="progress-fill" id="progressFill" style="width:0%"></div>
-          <div class="progress-dot" style="left:0%"></div>
-        </div>
-      </div>
-      <div class="ctrl-right">
-        <!-- 加入/移除koko歌单 -->
-        <button class="ctrl-btn koko-btn" id="kokoBtn" onclick="toggleKoko()">
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="8"/>
-            <line x1="12" y1="9" x2="12" y2="15"/>
-            <line x1="9" y1="12" x2="15" y2="12"/>
-          </svg>
-        </button>
-        <!-- 播放列表 -->
         <button class="ctrl-btn" onclick="openPlSheet()">
           <svg viewBox="0 0 24 24">
             <circle cx="4.5" cy="7" r="1.5"/>
@@ -462,10 +485,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
             <circle cx="4.5" cy="17" r="1.5"/>
             <line x1="9" y1="17" x2="20" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
-        </button>
-        <!-- 实心爱心（无圆圈） -->
-        <button class="ctrl-btn fav-circle" onclick="toggleFav()" id="favBtn">
-          <svg id="favIcon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         </button>
       </div>
     </div>
@@ -2809,5 +2828,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     </div>
   </div>
 </div>
+
+<script>
+/* 11.6 iOS 小框：时间、剩余时间、歌名 — 歌手 */
+(function(){
+  function f(t){t=Math.max(0,Math.floor(t||0));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+  setInterval(function(){
+    try{
+      var a=document.getElementById('audio'),c=document.getElementById('npCur'),l=document.getElementById('npLeft'),sub=document.getElementById('npSub');
+      if(a&&c&&l){var d=isFinite(a.duration)?a.duration:0;c.textContent=f(a.currentTime);l.textContent='-'+f(d-a.currentTime);}
+      var n=document.getElementById('songName'),ar=document.getElementById('songArtist');
+      if(sub&&n){var t=(n.textContent||'').trim(),r=ar?(ar.textContent||'').trim():'';var v=(r&&r!=='-')?t+' — '+r:t;if(sub.textContent!==v)sub.textContent=v;}
+    }catch(e){}
+  },500);
+})();
+</script>
 </body>
 </html>
