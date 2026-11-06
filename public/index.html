@@ -378,17 +378,35 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .np-ctrl .fav-circle{width:auto;height:auto}
 .np-ctrl .fav-circle svg{width:17px;height:17px}
 
+/* 11.6 iOS 音乐胶囊底栏 + 小播放器 */
+.tab-bar{left:16px!important;right:16px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 6px)!important;height:56px;padding:4px!important;border-radius:999px;align-items:stretch;
+  background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 4px 18px rgba(0,0,0,.10)}
+.tab{padding:5px 0 4px!important;gap:2px!important;font-size:10px!important;font-weight:600;border-radius:999px;color:var(--text);text-shadow:none!important;justify-content:center}
+.tab svg{width:23px;height:23px;fill:currentColor}
+.tab.active{color:var(--active);background:rgba(255,255,255,.55)}
+.mini-np{position:fixed;z-index:101;left:22px;right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);height:50px;border-radius:999px;display:flex;align-items:center;gap:10px;padding:0 10px 0 8px;cursor:pointer;
+  background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 4px 16px rgba(0,0,0,.10)}
+body[data-tab="play"] .mini-np,body:not([data-tab]) .mini-np{display:none}
+.mini-cover{flex:none;width:34px;height:34px;border-radius:8px;background:rgba(242,168,192,.35) center/cover no-repeat}
+.mini-title{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-btn{flex:none;background:none;border:none;padding:6px;display:flex;align-items:center;justify-content:center;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mini-btn svg{width:22px;height:22px;fill:currentColor}
+.main{bottom:calc(env(safe-area-inset-bottom,0px) + 68px)!important}
+body[data-tab]:not([data-tab="play"]) .main{bottom:calc(env(safe-area-inset-bottom,0px) + 126px)!important}
+.together-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:100%;color:var(--text2);text-align:center;padding:0 32px}
+.te-icon{font-size:40px}.te-title{font-size:17px;font-weight:700;color:var(--text)}.te-sub{font-size:13px}
+
 /* 11.6 她：音乐里圈的四块（顶栏、封面卡、播放条那一行、底下播放/搜索/我的）换成真液态玻璃，先用清透看看。
    koko♡kai App run 126 打开了 WebKit 私有开关 useSystemAppearance，网页能用 -apple-visual-effect 画真玻璃；别的地方不认就照原样 */
 @supports (-apple-visual-effect: -apple-system-glass-material-clear){
-  .top-nav-capsule,.cover-wrap,.ios-np,.play-tab-bar,.tab-bar{
+  .top-nav-capsule,.cover-wrap,.ios-np,.play-tab-bar,.tab-bar,.mini-np{
     background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
     box-shadow:none!important;border-color:transparent!important;
     -apple-visual-effect:-apple-system-glass-material-clear;}
 }
 </style>
 </head>
-<body>
+<body data-tab="play">
 
 <!-- 全局顶部小胶囊（替代原导航栏，三个页面共用） -->
 <div class="top-nav-capsule">
@@ -574,6 +592,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
     </div>
   </div>
 
+  <!-- 11.6 一起听（先占个位，里面放什么等她一起定） -->
+  <div class="page" id="page-together">
+    <div class="together-empty"><div class="te-icon">🎧</div><div class="te-title">一起听</div><div class="te-sub">还在装修，等陛下和小克一起定里面放什么</div></div>
+  </div>
   <!-- 我的页 -->
   <div class="page" id="page-my">
     <div class="my-page" id="myPageContent">
@@ -584,10 +606,18 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 </div>
 
 <!-- 底部tab -->
+<!-- 11.6 她：底下做成 iOS 音乐那种胶囊（主页/播放/一起听/搜索），播放页以外加一条小播放器 -->
+<div class="mini-np" id="miniNp" onclick="switchTab('play')">
+  <div class="mini-cover" id="miniCover"></div>
+  <div class="mini-title" id="miniTitle">未在播放</div>
+  <button class="mini-btn" onclick="event.stopPropagation();togglePlay()" aria-label="播放/暂停"><svg id="miniPlayIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+  <button class="mini-btn" onclick="event.stopPropagation();nextSong()" aria-label="下一首"><svg viewBox="0 0 24 24"><path d="M3.5 6.5v11l8-5.5z"/><path d="M12.5 6.5v11l8-5.5z"/></svg></button>
+</div>
 <div class="tab-bar">
-  <div class="tab active" onclick="switchTab('play')" id="tab-play">播放</div>
-  <div class="tab" onclick="switchTab('search')" id="tab-search">搜索</div>
-  <div class="tab" onclick="switchTab('my')" id="tab-my">我的</div>
+  <div class="tab" onclick="switchTab('my')" id="tab-my"><svg viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-5.5h-6v5.5H5.5A1.5 1.5 0 0 1 4 19z"/></svg><span>主页</span></div>
+  <div class="tab active" onclick="switchTab('play')" id="tab-play"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 8.6v6.8l5.4-3.4z"/></svg><span>播放</span></div>
+  <div class="tab" onclick="switchTab('together')" id="tab-together"><svg viewBox="0 0 24 24"><path d="M3.5 13v-1a8.5 8.5 0 0 1 17 0v1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="3" y="12.5" width="4.5" height="7" rx="2"/><rect x="16.5" y="12.5" width="4.5" height="7" rx="2"/></svg><span>一起听</span></div>
+  <div class="tab" onclick="switchTab('search')" id="tab-search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>搜索</span></div>
 </div>
 
 <!-- 登录弹窗 -->
@@ -1014,6 +1044,7 @@ function goBack() {
 let currentTab = 'play';
 function switchTab(tab) {
   currentTab = tab;
+  document.body.setAttribute('data-tab', tab);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -1029,7 +1060,7 @@ function updateCapsuleMid(tab) {
   if (tab === 'play') {
     mid.innerHTML = `<svg id="tncModeIcon" viewBox="0 0 24 24">${getModeInner()}</svg>`;
   } else {
-    const labels = {search:'搜索', my:'我的'};
+    const labels = {search:'搜索', my:'主页', together:'一起听'};
     mid.innerHTML = `<span style="font-size:13px;font-weight:600;color:var(--text)">${labels[tab]||''}</span>`;
   }
 }
@@ -2848,6 +2879,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       var a=document.getElementById('audio'),c=document.getElementById('npCur'),l=document.getElementById('npLeft'),sub=null;
       if(a&&c&&l){var d=isFinite(a.duration)?a.duration:0;c.textContent=f(a.currentTime);l.textContent='-'+f(d-a.currentTime);}
       var box=document.getElementById('iosNp');if(box&&a)box.classList.toggle('playing',!a.paused&&!a.ended);
+      var mt=document.getElementById('miniTitle'),sn=document.getElementById('songName');if(mt&&sn&&mt.textContent!==sn.textContent)mt.textContent=sn.textContent;
+      var mc=document.getElementById('miniCover'),ci=document.querySelector('#coverCur .cover-inner img');var src=ci?ci.src:'';if(mc&&mc.dataset.src!==src){mc.dataset.src=src;mc.style.backgroundImage=src?'url("'+src+'")':'';}
+      var mi=document.getElementById('miniPlayIcon');if(mi&&a){var on=!a.paused&&!a.ended;if(mi.dataset.on!==String(on)){mi.dataset.on=String(on);mi.innerHTML=on?'<rect x="6" y="4.5" width="4" height="15" rx="1.5"/><rect x="14" y="4.5" width="4" height="15" rx="1.5"/>':'<path d="M8 5v14l11-7z"/>';}}
     }catch(e){}
   },500);
 })();
