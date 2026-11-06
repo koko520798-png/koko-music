@@ -465,8 +465,8 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
           <div class="cover-wrap">
             <div class="cover-inner"><div class="cover-placeholder">🎶</div></div>
             <div class="cover-title">
-              <div class="song-name" id="songName">未在播放</div>
-              <div class="song-artist" id="songArtist">-</div>
+              <div class="song-name" id="songName">kai♡koko</div>
+              <div class="song-artist" id="songArtist"></div>
             </div>
           </div>
         </div>
@@ -483,8 +483,8 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
       <div class="np-top">
         <div class="np-side"></div>
         <div class="np-text">
-          <div class="lyric-line active" id="lyric-cur">打开歌单，开始听歌</div>
-          <div class="lyric-line np-sub" id="lyric-next">　</div>
+          <div class="lyric-line active" id="lyric-cur">.⊹୨୧ 愛を癒す天使 ♡⊹.</div>
+          <div class="lyric-line np-sub" id="lyric-next">˚♡✞ 天使の鼓動は天国からの白い音符 ♬</div>
         </div>
         <div class="np-side"><svg class="np-wave" viewBox="0 0 24 24" aria-hidden="true"><line x1="3.5" y1="11" x2="3.5" y2="13"/><line x1="7" y1="9" x2="7" y2="15"/><line x1="10.5" y1="6" x2="10.5" y2="18"/><line x1="14" y1="8" x2="14" y2="16"/><line x1="17.5" y1="10" x2="17.5" y2="14"/><line x1="21" y1="11" x2="21" y2="13"/></svg></div>
       </div>
@@ -630,7 +630,7 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 <!-- 11.6 她：底下做成 iOS 音乐那种胶囊（主页/播放/一起听/搜索），播放页以外加一条小播放器 -->
 <div class="mini-np" id="miniNp" onclick="switchTab('play')">
   <div class="mini-cover" id="miniCover"></div>
-  <div class="mini-info"><div class="mini-title" id="miniTitle">未在播放</div><div class="mini-sub" id="miniSub"></div></div>
+  <div class="mini-info"><div class="mini-title" id="miniTitle">kai♡koko</div><div class="mini-sub" id="miniSub"></div></div>
   <button class="mini-btn play" onclick="event.stopPropagation();togglePlay()" aria-label="播放/暂停"><svg id="miniPlayIcon" viewBox="0 0 16 18"><path d="M2 1.2v15.6c0 .8.9 1.3 1.6.9l12-7.8c.6-.4.6-1.4 0-1.8l-12-7.8C2.9-.1 2 .4 2 1.2z"/></svg></button>
   <button class="mini-btn next" onclick="event.stopPropagation();nextSong()" aria-label="下一首"><svg viewBox="0 0 26 16"><path d="M0 1.3v13.4c0 .9 1 1.4 1.7.9l10-6.7c.6-.4.6-1.4 0-1.8l-10-6.7C1 -.1 0 .4 0 1.3z"/><path d="M13 1.3v13.4c0 .9 1 1.4 1.7.9l10-6.7c.6-.4.6-1.4 0-1.8l-10-6.7C14 -.1 13 .4 13 1.3z"/></svg></button>
 </div>
@@ -671,6 +671,13 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 <script>
 const API = '/api/netease?key=xiaomao520';
 const MUSIC_API = '/api/music?key=xiaomao520';
+// 11.6 她：没放歌、或者这首歌没有歌词时，两行歌词用这两句
+const DEFAULT_LYRIC_1 = '.⊹୨୧ 愛を癒す天使 ♡⊹.', DEFAULT_LYRIC_2 = '˚♡✞ 天使の鼓動は天国からの白い音符 ♬';
+function showDefaultLyrics() {
+  const c = document.getElementById('lyric-cur'), n = document.getElementById('lyric-next');
+  if (c) { c.classList.remove('grad-lyric'); delete c.dataset.lineIdx; c.textContent = DEFAULT_LYRIC_1; }
+  if (n) n.textContent = DEFAULT_LYRIC_2;
+}
 const audio = document.getElementById('audio');
 const _preloadAudio = document.getElementById('audio-preload');
 let _preloadSongId = null; // 当前正在预加载的歌曲id
@@ -1508,8 +1515,8 @@ async function playCur() {
 }
 
 function updateSongUI(song) {
-  document.getElementById('songName').textContent = song.name || '-';
-  document.getElementById('songArtist').textContent = song.artist || '-';
+  document.getElementById('songName').textContent = song.name || 'kai♡koko';
+  document.getElementById('songArtist').textContent = song.artist || '';
   const mkInner = (url, size) => url
     ? `<img src="${url}?param=${size||'200y200'}">`
     : `<div class="cover-placeholder">🎵</div>`;
@@ -1553,8 +1560,7 @@ async function loadLyric(id) {
   _loadedLyricId = id;
   lyricLines = []; // 重置歌词数组（切歌时清空）
   document.getElementById('lyric-prev').textContent = '　';
-  document.getElementById('lyric-cur').textContent  = '🎵';
-  document.getElementById('lyric-next').textContent = '　';
+  showDefaultLyrics();
   try {
     // 优先尝试 /lyric/new 获取逐字yrc格式
     const d = await api('/lyric/new', { id });
@@ -1574,16 +1580,16 @@ async function loadLyric(id) {
       } catch(e2) {}
     }
     if (!lyricLines.length) {
-      document.getElementById('lyric-cur').textContent = '暂无歌词';
+      showDefaultLyrics();
     }
   } catch(e) {
     // 接口报错fallback到/lyric
     try {
       const d2 = await api('/lyric', { id });
       lyricLines = parseLyric(d2.lrc?.lyric || '');
-      if (!lyricLines.length) document.getElementById('lyric-cur').textContent = '暂无歌词';
+      if (!lyricLines.length) showDefaultLyrics();
     } catch(e2) {
-      document.getElementById('lyric-cur').textContent = '暂无歌词';
+      showDefaultLyrics();
     }
   }
 }
@@ -1990,7 +1996,7 @@ function renderPlaylist() {
 }
 function playSongAt(idx) { pushCurToHistory(); curIdx = idx; playCur(); }
 function removeSong(idx) { playlist.splice(idx,1); if(curIdx>=playlist.length) curIdx=Math.max(0,playlist.length-1); savePlaylist(); }
-function clearPlaylist() { playlist=[]; curIdx=0; audio.pause(); audio.src=''; isPlaying=false; setPlayIcon(false); savePlaylist(); document.getElementById('songName').textContent='未在播放'; document.getElementById('songArtist').textContent='-'; document.querySelector('#coverCur .cover-inner').innerHTML='<div class="cover-placeholder">🎶</div>'; }
+function clearPlaylist() { playlist=[]; curIdx=0; audio.pause(); audio.src=''; isPlaying=false; setPlayIcon(false); savePlaylist(); document.getElementById('songName').textContent='kai♡koko'; document.getElementById('songArtist').textContent=''; showDefaultLyrics(); document.querySelector('#coverCur .cover-inner').innerHTML='<div class="cover-placeholder">🎶</div>'; }
 const _tabOrder = ['heart','recommend','koko'];
 const _tabNames = {heart:'心动',recommend:'推荐',koko:'歌单'};
 function cyclePlayTab() {
@@ -2907,11 +2913,27 @@ window.addEventListener('DOMContentLoaded', async () => {
 (function(){
   var IDS=['coverFarPrev','coverPrev','coverCur','coverNext','coverFarNext'];
   function key(id){return 'xk-cover-ph-'+id;}
-  function apply(id){
+  /* 11.6 她：换的图大退回来不见了。WebKit 的 localStorage 不是马上写进硬盘，大退得快就丢；改存 IndexedDB（写完才算存好），localStorage 只当备份 */
+  var dbp=null;
+  function db(){
+    if(dbp)return dbp;
+    dbp=new Promise(function(ok,no){try{var r=indexedDB.open('koko-music-ph',1);r.onupgradeneeded=function(){r.result.createObjectStore('ph');};r.onsuccess=function(){ok(r.result);};r.onerror=function(){no(r.error);};}catch(e){no(e);}});
+    return dbp;
+  }
+  function dbGet(id){return db().then(function(d){return new Promise(function(ok){var q=d.transaction('ph','readonly').objectStore('ph').get(id);q.onsuccess=function(){ok(q.result||null);};q.onerror=function(){ok(null);};});}).catch(function(){return null;});}
+  function dbPut(id,v){return db().then(function(d){return new Promise(function(ok,no){var t=d.transaction('ph','readwrite');t.objectStore('ph').put(v,id);t.oncomplete=function(){ok();};t.onerror=function(){no(t.error);};});});}
+  function show(id,v){
     var el=document.getElementById(id);if(!el)return;
-    var v=null;try{v=localStorage.getItem(key(id));}catch(e){}
     if(v){el.style.setProperty('--ph','url("'+v+'")');el.classList.add('has-ph');}
     else{el.style.removeProperty('--ph');el.classList.remove('has-ph');}
+  }
+  function apply(id){
+    var v=null;try{v=localStorage.getItem(key(id));}catch(e){}
+    if(v)show(id,v);
+    dbGet(id).then(function(d){
+      if(d){show(id,d);if(d!==v){try{localStorage.setItem(key(id),d);}catch(e){}}}
+      else if(v){dbPut(id,v).catch(function(){});}  /* 以前只存在 localStorage 的搬进去 */
+    });
   }
   function shrink(dataUrl,cb){
     var im=new Image();im.onload=function(){
@@ -2933,7 +2955,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.addEventListener('touchstart',function(e){if(pill.classList.contains('on')&&!pill.contains(e.target))hidePill();},true);
   input.addEventListener('change',function(){
     var f=input.files&&input.files[0];input.value='';hidePill();if(!f||!target)return;var id=target;
-    var rd=new FileReader();rd.onload=function(){shrink(rd.result,function(d){try{localStorage.setItem(key(id),d);}catch(e){}apply(id);});};rd.readAsDataURL(f);
+    var rd=new FileReader();rd.onload=function(){shrink(rd.result,function(d){show(id,d);try{localStorage.setItem(key(id),d);}catch(e){}dbPut(id,d).then(function(){try{showToast('换好啦，存住了 ♡');}catch(e){}}).catch(function(){try{showToast('没存上，再试一次');}catch(e){}});});};rd.readAsDataURL(f);
   });
   var suppress=0;
   document.addEventListener('click',function(e){if(Date.now()<suppress&&!pill.contains(e.target)){e.preventDefault();e.stopPropagation();}},true);
