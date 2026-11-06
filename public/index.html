@@ -67,6 +67,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-item.has-ph .cover-placeholder{background:var(--ph) center/cover no-repeat;font-size:0}
 .cover-carousel,.cover-carousel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none} /* 长按不选中 🎵、不弹 拷贝/查询 */
 .cover-item.ph-arm .cover-wrap{transform:scale(.96);transition:transform .15s}
+.ph-pill{position:fixed;z-index:300;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;transition:opacity .15s,transform .18s cubic-bezier(.3,1.4,.5,1);
+  padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:14px;font-weight:600;color:#1c1c1e;white-space:nowrap;overflow:hidden}
+.ph-pill.on{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+.ph-pill-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:40px;cursor:pointer}
+@supports (-apple-visual-effect: -apple-system-glass-material){.ph-pill{background:transparent;box-shadow:none;-apple-visual-effect:-apple-system-glass-material}}
+
 /* 歌名在中间卡片底部白区 */
 .cover-title{width:100%;padding:3px 8px 0;text-align:center;display:none;margin-top:2px}
 .cover-item.center .cover-title{display:block}
@@ -2914,14 +2920,23 @@ window.addEventListener('DOMContentLoaded', async () => {
       cb(c.toDataURL('image/jpeg',.88));
     };im.onerror=function(){cb(dataUrl);};im.src=dataUrl;
   }
-  var input=document.createElement('input');input.type='file';input.accept='image/*';input.style.display='none';document.body.appendChild(input);
+  /* 11.6 iOS 只在「真点了一下」时让网页开相册，长按松手不算。所以长按后冒出一个「换这张图」小胶囊，里面盖着一个透明的真选图框，她点胶囊就是直接点在选图框上 */
+  var pill=document.createElement('div');pill.className='ph-pill';pill.innerHTML='<span>换这张图</span>';
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.className='ph-pill-input';input.setAttribute('aria-label','换这张图');
+  pill.appendChild(input);document.body.appendChild(pill);
   var target=null;
+  function hidePill(){pill.classList.remove('on');}
+  function showPill(id){
+    var el=document.getElementById(id);if(!el)return;var r=el.getBoundingClientRect();
+    target=id;pill.style.left=(r.left+r.width/2)+'px';pill.style.top=(r.top+r.height/2)+'px';pill.classList.add('on');
+  }
+  document.addEventListener('touchstart',function(e){if(pill.classList.contains('on')&&!pill.contains(e.target))hidePill();},true);
   input.addEventListener('change',function(){
-    var f=input.files&&input.files[0];input.value='';if(!f||!target)return;var id=target;
+    var f=input.files&&input.files[0];input.value='';hidePill();if(!f||!target)return;var id=target;
     var rd=new FileReader();rd.onload=function(){shrink(rd.result,function(d){try{localStorage.setItem(key(id),d);}catch(e){}apply(id);});};rd.readAsDataURL(f);
   });
   var suppress=0;
-  document.addEventListener('click',function(e){if(Date.now()<suppress){e.preventDefault();e.stopPropagation();}},true);
+  document.addEventListener('click',function(e){if(Date.now()<suppress&&!pill.contains(e.target)){e.preventDefault();e.stopPropagation();}},true);
   IDS.forEach(function(id){
     apply(id);
     var el=document.getElementById(id);if(!el)return;
@@ -2931,11 +2946,11 @@ window.addEventListener('DOMContentLoaded', async () => {
       /* 挡掉 iOS 自己的长按（选字、拷贝菜单会把这次按压取消掉，松手事件就收不到）和点一下的点击（她：点封面框不要放歌）；左右划切歌用的是外面那层自己的 touch，不受影响 */
       if(e.cancelable)e.preventDefault();
       var p=e.touches[0];sx=p.clientX;sy=p.clientY;clearTimeout(t);armed=false;
-      t=setTimeout(function(){t=null;armed=true;el.classList.add('ph-arm');try{navigator.vibrate&&navigator.vibrate(10);}catch(_){}},550);
+      t=setTimeout(function(){t=null;armed=true;el.classList.add('ph-arm');try{navigator.vibrate&&navigator.vibrate(10);}catch(_){}showPill(id);},550);
     },{passive:false});
     el.addEventListener('touchmove',function(e){var p=e.touches[0];if(Math.abs(p.clientX-sx)>8||Math.abs(p.clientY-sy)>8){clearTimeout(t);t=null;armed=false;el.classList.remove('ph-arm');}},{passive:true});
     /* iOS 只认手指松开这一下是「人点的」，相册要在这里打开（按住时打开会被拦） */
-    el.addEventListener('touchend',function(e){clearTimeout(t);t=null;el.classList.remove('ph-arm');if(armed){armed=false;suppress=Date.now()+900;e.preventDefault();target=id;input.click();}},{passive:false});
+    el.addEventListener('touchend',function(e){clearTimeout(t);t=null;el.classList.remove('ph-arm');if(armed){armed=false;suppress=Date.now()+900;e.preventDefault();}},{passive:false});
     el.addEventListener('touchcancel',function(){clearTimeout(t);t=null;armed=false;el.classList.remove('ph-arm');},{passive:true});
     el.addEventListener('contextmenu',function(e){e.preventDefault();});
   });
