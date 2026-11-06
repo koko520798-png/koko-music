@@ -64,7 +64,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-inner img{width:100%;height:100%;object-fit:cover;display:block}
 .cover-placeholder{width:100%;height:100%;background:rgba(242,168,192,.35);display:flex;align-items:center;justify-content:center;font-size:28px}
 /* 11.6 她：长按封面框换图，换的图当没点歌时的默认图（点了歌照样显示歌的封面） */
-.cover-item.has-ph .cover-placeholder{background:var(--ph) center/cover no-repeat;font-size:0}
+#coverFarPrev .cover-placeholder{background:url(/ph/1-wing.jpg) center/cover no-repeat;font-size:0}
+#coverPrev .cover-placeholder{background:url(/ph/2-cat.jpg) center/cover no-repeat;font-size:0}
+#coverCur .cover-placeholder{background:url(/ph/3-angel.jpg) center/cover no-repeat;font-size:0}
+#coverNext .cover-placeholder{background:url(/ph/4-heart.jpg) center/cover no-repeat;font-size:0}
+#coverFarNext .cover-placeholder{background:url(/ph/5-bunny.jpg) center/cover no-repeat;font-size:0}
+.cover-item.has-ph .cover-placeholder{background:var(--ph) center/cover no-repeat!important;font-size:0}
 .cover-carousel,.cover-carousel *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none} /* 长按不选中 🎵、不弹 拷贝/查询 */
 .cover-item.ph-arm .cover-wrap{transform:scale(.96);transition:transform .15s}
 .ph-pill{position:fixed;z-index:300;transform:translate(-50%,-50%) scale(.6);opacity:0;pointer-events:none;transition:opacity .15s,transform .18s cubic-bezier(.3,1.4,.5,1);
@@ -673,6 +678,11 @@ const API = '/api/netease?key=xiaomao520';
 const MUSIC_API = '/api/music?key=xiaomao520';
 // 11.6 她：没放歌、或者这首歌没有歌词时，两行歌词用这两句
 const DEFAULT_LYRIC_1 = '.⊹୨୧ 愛を癒す天使 ♡⊹.', DEFAULT_LYRIC_2 = '˚♡✞ 天使の鼓動は天国からの白い音符 ♬';
+function _isPureMusic(lines) {
+  if (!lines || !lines.length) return false;
+  const txt = lines.map(l => (l.text || (l.words || []).map(w => w.text).join('') || '').trim()).filter(Boolean);
+  return txt.length <= 3 && txt.some(t => /纯音乐|请欣赏|没有填词/.test(t));
+}
 function showDefaultLyrics() {
   const c = document.getElementById('lyric-cur'), n = document.getElementById('lyric-next');
   if (c) { c.classList.remove('grad-lyric'); delete c.dataset.lineIdx; c.textContent = DEFAULT_LYRIC_1; }
@@ -1579,6 +1589,7 @@ async function loadLyric(id) {
         lyricLines = parseLyric(d2.lrc?.lyric || '');
       } catch(e2) {}
     }
+    if (_isPureMusic(lyricLines)) lyricLines = [];  // 11.6 她：纯音乐（只有「纯音乐，请欣赏」）也用默认两句
     if (!lyricLines.length) {
       showDefaultLyrics();
     }
@@ -1587,6 +1598,7 @@ async function loadLyric(id) {
     try {
       const d2 = await api('/lyric', { id });
       lyricLines = parseLyric(d2.lrc?.lyric || '');
+      if (_isPureMusic(lyricLines)) lyricLines = [];
       if (!lyricLines.length) showDefaultLyrics();
     } catch(e2) {
       showDefaultLyrics();
