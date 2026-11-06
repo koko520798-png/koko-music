@@ -63,6 +63,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-inner{overflow:hidden;flex-shrink:0}
 .cover-inner img{width:100%;height:100%;object-fit:cover;display:block}
 .cover-placeholder{width:100%;height:100%;background:rgba(242,168,192,.35);display:flex;align-items:center;justify-content:center;font-size:28px}
+/* 11.6 她：长按封面框换图，换的图当没点歌时的默认图（点了歌照样显示歌的封面） */
+.cover-item.has-ph .cover-placeholder{background:var(--ph) center/cover no-repeat;font-size:0}
 /* 歌名在中间卡片底部白区 */
 .cover-title{width:100%;padding:3px 8px 0;text-align:center;display:none;margin-top:2px}
 .cover-item.center .cover-title{display:block}
@@ -626,7 +628,7 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 </div>
 <div class="tab-bar">
   <div class="tab" onclick="switchTab('my')" id="tab-my"><svg viewBox="0 0 24 24"><path d="M10.7 2.6a2 2 0 0 1 2.6 0l7.6 6.6c.7.6 1.1 1.4 1.1 2.3V20a2 2 0 0 1-2 2h-4.3a.8.8 0 0 1-.8-.8v-4.6a1.2 1.2 0 0 0-1.2-1.2h-3.4a1.2 1.2 0 0 0-1.2 1.2v4.6a.8.8 0 0 1-.8.8H4a2 2 0 0 1-2-2v-8.5c0-.9.4-1.7 1.1-2.3z"/></svg><span>主页</span></div>
-  <div class="tab active" onclick="switchTab('play')" id="tab-play"><svg viewBox="0 0 24 24"><path d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21zm-2.2 6c0-.8.9-1.3 1.6-.8l6.3 4.5c.6.4.6 1.2 0 1.6l-6.3 4.5c-.7.5-1.6 0-1.6-.8z"/></svg><span>播放</span></div>
+  <div class="tab active" onclick="switchTab('play')" id="tab-play"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21zM9.6 8.1c0-.8.9-1.3 1.6-.9l5.1 3.9c.6.4.6 1.3 0 1.8l-5.1 3.9c-.7.4-1.6-.1-1.6-.9z"/></svg><span>播放</span></div>
   <div class="tab" onclick="switchTab('together')" id="tab-together"><svg viewBox="0 0 24 24"><path d="M12 2.5C6.8 2.5 2.6 6.6 2.6 11.8v6.4A3.3 3.3 0 0 0 5.9 21.5h.9c1 0 1.7-.8 1.7-1.7v-5.6c0-1-.8-1.7-1.7-1.7H4.8v-.7c0-4 3.2-7.2 7.2-7.2s7.2 3.2 7.2 7.2v.7h-2c-1 0-1.7.8-1.7 1.7v5.6c0 1 .8 1.7 1.7 1.7h.9a3.3 3.3 0 0 0 3.3-3.3v-6.4c0-5.2-4.2-9.3-9.4-9.3z"/></svg><span>一起听</span></div>
   <div class="tab" onclick="switchTab('search')" id="tab-search"><svg viewBox="0 0 24 24"><path d="M10.2 2.2a8 8 0 0 1 6.5 12.7l4.7 4.7a1.4 1.4 0 0 1-2 2l-4.7-4.7a8 8 0 1 1-4.5-14.7zm0 2.7a5.3 5.3 0 1 0 0 10.6 5.3 5.3 0 0 0 0-10.6z"/></svg><span>搜索</span></div>
 </div>
@@ -2896,6 +2898,47 @@ window.addEventListener('DOMContentLoaded', async () => {
       var mi=document.getElementById('miniPlayIcon');if(mi&&a){var on=!a.paused&&!a.ended;if(mi.dataset.on!==String(on)){mi.dataset.on=String(on);mi.innerHTML=on?'<rect x="2" y="1" width="4.4" height="16" rx="1.2"/><rect x="9.6" y="1" width="4.4" height="16" rx="1.2"/>':'<path d="M2 1.2v15.6c0 .8.9 1.3 1.6.9l12-7.8c.6-.4.6-1.4 0-1.8l-12-7.8C2.9-.1 2 .4 2 1.2z"/>';}}
     }catch(e){}
   },500);
+})();
+</script>
+
+<script>
+/* 11.6 长按封面框换默认图：每个框（最左、左、中、右、最右）各存一张，存在这台手机里 */
+(function(){
+  var IDS=['coverFarPrev','coverPrev','coverCur','coverNext','coverFarNext'];
+  function key(id){return 'xk-cover-ph-'+id;}
+  function apply(id){
+    var el=document.getElementById(id);if(!el)return;
+    var v=null;try{v=localStorage.getItem(key(id));}catch(e){}
+    if(v){el.style.setProperty('--ph','url("'+v+'")');el.classList.add('has-ph');}
+    else{el.style.removeProperty('--ph');el.classList.remove('has-ph');}
+  }
+  function shrink(dataUrl,cb){
+    var im=new Image();im.onload=function(){
+      var W=Math.min(500,im.width),k=W/im.width,c=document.createElement('canvas');c.width=W;c.height=Math.round(im.height*k);
+      var g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+      cb(c.toDataURL('image/jpeg',.88));
+    };im.onerror=function(){cb(dataUrl);};im.src=dataUrl;
+  }
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.style.display='none';document.body.appendChild(input);
+  var target=null;
+  input.addEventListener('change',function(){
+    var f=input.files&&input.files[0];input.value='';if(!f||!target)return;var id=target;
+    var rd=new FileReader();rd.onload=function(){shrink(rd.result,function(d){try{localStorage.setItem(key(id),d);}catch(e){}apply(id);});};rd.readAsDataURL(f);
+  });
+  var suppress=0;
+  document.addEventListener('click',function(e){if(Date.now()<suppress){e.preventDefault();e.stopPropagation();}},true);
+  IDS.forEach(function(id){
+    apply(id);
+    var el=document.getElementById(id);if(!el)return;
+    var t=null,sx=0,sy=0;
+    el.addEventListener('touchstart',function(e){
+      var p=e.touches[0];sx=p.clientX;sy=p.clientY;clearTimeout(t);
+      t=setTimeout(function(){t=null;suppress=Date.now()+900;try{navigator.vibrate&&navigator.vibrate(10);}catch(_){}target=id;input.click();},550);
+    },{passive:true});
+    el.addEventListener('touchmove',function(e){var p=e.touches[0];if(Math.abs(p.clientX-sx)>8||Math.abs(p.clientY-sy)>8){clearTimeout(t);t=null;}},{passive:true});
+    el.addEventListener('touchend',function(){clearTimeout(t);t=null;},{passive:true});
+    el.addEventListener('contextmenu',function(e){e.preventDefault();});
+  });
 })();
 </script>
 </body>
