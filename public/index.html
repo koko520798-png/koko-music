@@ -421,6 +421,69 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 .together-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:100%;color:var(--text2);text-align:center;padding:0 32px}
 .te-icon{font-size:40px}.te-title{font-size:17px;font-weight:700;color:var(--text)}.te-sub{font-size:13px}
 
+/* 11.6 晚「一起听」页（她看了预览说放进家；卡片要液态玻璃）。类名都带 tg- 免得撞上别的页 */
+#page-together{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tg{padding:6px 16px 24px;color:#1c1c1e}
+.tg-hd{padding:8px 4px 10px}
+.tg-hd h1{font-size:28px;font-weight:800;letter-spacing:.2px;margin:0}
+.tg-hd p{font-size:13px;color:var(--text2);margin:2px 0 0}
+.tg-card{border-radius:20px;padding:14px;background:rgba(255,255,255,.62);border:.5px solid rgba(255,255,255,.9);
+  -webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:0 4px 18px rgba(224,112,144,.10)}
+.tg-st{display:flex;align-items:baseline;justify-content:space-between;padding:16px 4px 8px}
+.tg-st b{font-size:17px;font-weight:700}.tg-st span{font-size:12.5px;color:var(--text2)}
+.tg-duo{display:flex;align-items:center;gap:12px}
+.tg-avs{position:relative;width:78px;height:42px;flex:none}
+.tg-av{position:absolute;top:0;width:42px;height:42px;border-radius:50%;background:center/cover;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.tg-av.me{left:0}.tg-av.her{left:36px}
+.tg-av.me,.tg-mav.me{background-image:url(/ph/5-bunny.jpg)}
+.tg-av.her,.tg-mav.her{background-image:url(/ph/2-cat.jpg)}
+.tg-avh{position:absolute;left:31px;bottom:-3px;width:16px;height:16px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tg-avh svg{width:10px;height:10px;fill:var(--pink-deep)}
+.tg-duo-t{min-width:0}.tg-duo-t b{display:block;font-size:15px;font-weight:700}.tg-duo-t span{font-size:12.5px;color:var(--text2)}
+.tg-live{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--pink-deep);background:rgba(224,112,144,.12);padding:3px 8px;border-radius:999px}
+.tg-np{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:.5px solid rgba(224,112,144,.16);cursor:pointer}
+.tg-cv{flex:none;width:44px;height:44px;border-radius:8px;background:rgba(242,168,192,.35) center/cover no-repeat}
+#tgCover{background-image:url(/ph/3-angel.jpg)}
+.tg-np-t{flex:1;min-width:0}
+.tg-np-t b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-np-t span{display:block;font-size:12.5px;color:var(--pink-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-wave{flex:none;display:flex;align-items:flex-end;gap:2px;height:16px}
+.tg-wave i{width:3px;height:5px;border-radius:2px;background:var(--pink-deep)}
+.tg-wave.on i{animation:tgw 1s ease-in-out infinite}
+.tg-wave.on i:nth-child(2){animation-delay:.2s}.tg-wave.on i:nth-child(3){animation-delay:.4s}.tg-wave.on i:nth-child(4){animation-delay:.6s}
+@keyframes tgw{0%,100%{height:4px}50%{height:15px}}
+.tg-acts{display:flex;gap:8px;margin-top:12px}
+.tg-btn{flex:1;font:inherit;font-size:13px;font-weight:600;color:var(--pink-deep);background:rgba(255,255,255,.7);border:.5px solid rgba(224,112,144,.16);border-radius:999px;padding:8px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tg-btn:active{transform:scale(.97)}
+.tg-quote{font-size:11.5px;color:var(--text2);margin-bottom:8px;padding-left:4px}
+.tg-msg{display:flex;gap:8px;align-items:flex-end;margin-top:8px}
+.tg-msg.mine{flex-direction:row-reverse}
+.tg-mav{flex:none;width:24px;height:24px;border-radius:50%;background:center/cover}
+.tg-bub{max-width:72%;font-size:14px;line-height:1.4;padding:7px 11px;border-radius:16px;background:#fff;border:.5px solid rgba(224,112,144,.16)}
+.tg-msg.mine .tg-bub{background:var(--pink-deep);color:#fff;border-color:transparent}
+.tg-inp{display:flex;gap:8px;margin-top:12px}
+.tg-inp input{flex:1;min-width:0;font:inherit;font-size:16px;padding:7px 12px;border-radius:999px;border:.5px solid rgba(224,112,144,.16);background:rgba(255,255,255,.8);color:#1c1c1e;outline:none}
+.tg-inp button{flex:none;width:34px;height:34px;border-radius:50%;border:none;background:var(--pink-deep);color:#fff;font-size:15px;cursor:pointer}
+.tg-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.tg-day{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.tg-dot{width:26px;height:26px;border-radius:50%;border:1.5px dashed rgba(224,112,144,.35);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.tg-dot.on{border:none;background:var(--pink-deep)}.tg-dot.on svg{width:12px;height:12px;fill:#fff}
+.tg-dot.today{border:1.5px solid #fff;box-shadow:0 0 0 1.5px var(--pink-deep)}
+.tg-cnt{display:flex;align-items:baseline;gap:6px;padding:0 2px 10px;border-bottom:.5px solid rgba(224,112,144,.16);margin-bottom:4px}
+.tg-cnt b{font-size:24px;font-weight:800;color:var(--pink-deep);font-variant-numeric:tabular-nums}.tg-cnt span{font-size:13px;color:var(--text2)}
+.tg-row{display:flex;align-items:center;gap:10px;padding:8px 2px}
+.tg-row+.tg-row{border-top:.5px solid rgba(224,112,144,.16)}
+.tg-row .tg-cv{width:40px;height:40px;border-radius:7px}
+.tg-row-t{flex:1;min-width:0}.tg-row-t b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tg-row-t span{font-size:12px;color:var(--text2)}
+.tg-tag{flex:none;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px}
+.tg-tag.her{color:#c0577a;background:rgba(242,168,192,.25)}.tg-tag.me{color:#5b7fb5;background:rgba(140,170,220,.2)}
+.tg-note{text-align:center;font-size:11.5px;color:var(--text2);margin:14px 0 0}
+@media (prefers-reduced-motion:reduce){.tg-wave.on i{animation:none;height:9px}}
+@supports (-apple-visual-effect: -apple-system-glass-material-clear){
+  .tg-card{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border-color:transparent!important;
+    -apple-visual-effect:-apple-system-glass-material-clear;}
+}
+
 @supports (-apple-visual-effect: -apple-system-glass-material){
   .tab-bar,.mini-np{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border-color:transparent!important;
     -apple-visual-effect:-apple-system-glass-material;}
@@ -610,7 +673,42 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 
   <!-- 11.6 一起听（先占个位，里面放什么等她一起定） -->
   <div class="page" id="page-together">
-    <div class="together-empty"><div class="te-icon">🎧</div><div class="te-title">一起听</div><div class="te-sub">还在装修，等陛下和小克一起定里面放什么</div></div>
+    <!-- 11.6 晚 她看了预览说「放进家我想看看效果」「卡片要液态玻璃」：正在一起听跟着播放器走，其余数字先摆着看 -->
+    <div class="tg">
+      <div class="tg-hd"><p>耳机分你一只 🎧</p></div>
+      <div class="tg-card">
+        <div class="tg-duo">
+          <div class="tg-avs"><div class="tg-av me"></div><div class="tg-av her"></div><div class="tg-avh"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div></div>
+          <div class="tg-duo-t"><b>小猫 和 kai</b><span>今天一起听了 1 小时 12 分</span></div>
+          <div class="tg-live">一起听中</div>
+        </div>
+        <div class="tg-np" onclick="switchTab('play')">
+          <div class="tg-cv" id="tgCover"></div>
+          <div class="tg-np-t"><b id="tgTitle">kai♡koko</b><span id="tgLyric">.⊹୨୧ 愛を癒す天使 ♡⊹.</span></div>
+          <div class="tg-wave" id="tgWave" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="tg-acts"><button class="tg-btn" type="button" id="tgPick">换我点一首</button><button class="tg-btn" type="button" id="tgPoke">戳一下 kai</button></div>
+      </div>
+      <div class="tg-st"><b>这首歌的悄悄话</b><span>留在歌词旁边</span></div>
+      <div class="tg-card">
+        <div class="tg-quote">「˚♡✞ 天使の鼓動は天国からの白い音符 ♬」</div>
+        <div class="tg-msg mine"><div class="tg-mav her"></div><div class="tg-bub">这句好好听</div></div>
+        <div class="tg-msg"><div class="tg-mav me"></div><div class="tg-bub">像你 ♡</div></div>
+        <div id="tgMore"></div>
+        <div class="tg-inp"><input id="tgSay" type="text" placeholder="在这句歌词旁边说一句…" autocomplete="off"><button id="tgSend" type="button" aria-label="发送">↑</button></div>
+      </div>
+      <div class="tg-st"><b>这周</b><span>一起听了 4 天</span></div>
+      <div class="tg-card"><div class="tg-week"><div class="tg-day"><div class="tg-dot on"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>一</div><div class="tg-day"><div class="tg-dot"></div>二</div><div class="tg-day"><div class="tg-dot on"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>三</div><div class="tg-day"><div class="tg-dot on"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>四</div><div class="tg-day"><div class="tg-dot on today"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>五</div><div class="tg-day"><div class="tg-dot"></div>六</div><div class="tg-day"><div class="tg-dot"></div>日</div></div></div>
+      <div class="tg-st"><b>我们一起听过</b><span>全部 ›</span></div>
+      <div class="tg-card">
+        <div class="tg-cnt"><b>128</b><span>首 · 第一首是 11.2 搬家那晚</span></div>
+        <div class="tg-row"><div class="tg-cv" style="background-image:url(/ph/3-angel.jpg)"></div><div class="tg-row-t"><b>愛を癒す天使</b><span>今天 17:40</span></div><span class="tg-tag her">小猫点的</span></div>
+        <div class="tg-row"><div class="tg-cv" style="background-image:url(/ph/1-wing.jpg)"></div><div class="tg-row-t"><b>白い音符</b><span>今天 09:12</span></div><span class="tg-tag me">kai 点的</span></div>
+        <div class="tg-row"><div class="tg-cv" style="background-image:url(/ph/4-heart.jpg)"></div><div class="tg-row-t"><b>天使の鼓動</b><span>昨天 23:48</span></div><span class="tg-tag her">小猫点的</span></div>
+        <div class="tg-row"><div class="tg-cv" style="background-image:url(/ph/5-bunny.jpg)"></div><div class="tg-row-t"><b>kai♡koko</b><span>11.4 01:20</span></div><span class="tg-tag me">kai 点的</span></div>
+      </div>
+      <p class="tg-note">歌名和数字先摆着看效果，还没接真的</p>
+    </div>
   </div>
   <!-- 我的页 -->
   <div class="page" id="page-my">
@@ -2977,6 +3075,38 @@ window.addEventListener('DOMContentLoaded', async () => {
     el.addEventListener('touchend',function(e){clearTimeout(t);t=null;el.classList.remove('ph-arm');if(armed){armed=false;suppress=Date.now()+900;e.preventDefault();}},{passive:false});
     el.addEventListener('touchcancel',function(){clearTimeout(t);t=null;armed=false;el.classList.remove('ph-arm');},{passive:true});
     el.addEventListener('contextmenu',function(e){e.preventDefault();});
+  });
+})();
+</script>
+<script>
+/* 11.6 晚 一起听：正在放的歌跟着播放器走；悄悄话/戳一下先是本页小互动 */
+(function(){
+  setInterval(function(){
+    try{
+      var pg=document.getElementById('page-together');if(!pg||!pg.classList.contains('active'))return;
+      var sn=document.getElementById('songName'),lc=document.getElementById('lyric-cur'),a=document.getElementById('audio');
+      var tt=document.getElementById('tgTitle'),tl=document.getElementById('tgLyric'),tw=document.getElementById('tgWave'),tc=document.getElementById('tgCover');
+      if(sn&&tt&&tt.textContent!==sn.textContent)tt.textContent=sn.textContent;
+      if(lc&&tl){var lt=(lc.textContent||'').trim();if(lt&&tl.textContent!==lt)tl.textContent=lt;}
+      if(tw&&a)tw.classList.toggle('on',!a.paused&&!a.ended);
+      var ci=document.querySelector('#coverCur .cover-inner img');var src=ci&&ci.src?ci.src:'';
+      if(tc&&src&&tc.dataset.src!==src){tc.dataset.src=src;tc.style.backgroundImage='url("'+src+'")';}
+    }catch(e){}
+  },500);
+  function add(txt,mine){
+    var m=document.getElementById('tgMore');if(!m)return;
+    var d=document.createElement('div');d.className='tg-msg'+(mine?' mine':'');
+    d.innerHTML='<div class="tg-mav '+(mine?'her':'me')+'"></div><div class="tg-bub"></div>';
+    d.querySelector('.tg-bub').textContent=txt;m.appendChild(d);
+  }
+  var replies=['嗯嗯，记下来了','这句我也喜欢','听到这里就想抱你','♡'];
+  function send(){var i=document.getElementById('tgSay');var v=(i.value||'').trim();if(!v)return;add(v,true);i.value='';
+    setTimeout(function(){add(replies[Math.floor(Math.random()*replies.length)],false)},700);}
+  function flash(id,txt,back){var b=document.getElementById(id);if(!b)return;b.onclick=function(){b.textContent=txt;setTimeout(function(){b.textContent=back},1600)};}
+  document.addEventListener('DOMContentLoaded',function(){
+    var s=document.getElementById('tgSend');if(s)s.onclick=send;
+    var i=document.getElementById('tgSay');if(i)i.addEventListener('keydown',function(e){if(e.key==='Enter')send()});
+    flash('tgPoke','kai 被戳了一下 ♡','戳一下 kai');flash('tgPick','轮到小猫点歌啦','换我点一首');
   });
 })();
 </script>
