@@ -2935,9 +2935,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     var t=null,sx=0,sy=0;
     var armed=false;
     el.addEventListener('touchstart',function(e){
+      /* 挡掉 iOS 自己的长按（选字、拷贝菜单会把这次按压取消掉，松手事件就收不到）和点一下的点击（她：点封面框不要放歌）；左右划切歌用的是外面那层自己的 touch，不受影响 */
+      if(e.cancelable)e.preventDefault();
       var p=e.touches[0];sx=p.clientX;sy=p.clientY;clearTimeout(t);armed=false;
       t=setTimeout(function(){t=null;armed=true;el.classList.add('ph-arm');try{navigator.vibrate&&navigator.vibrate(10);}catch(_){}},550);
-    },{passive:true});
+    },{passive:false});
     el.addEventListener('touchmove',function(e){var p=e.touches[0];if(Math.abs(p.clientX-sx)>8||Math.abs(p.clientY-sy)>8){clearTimeout(t);t=null;armed=false;el.classList.remove('ph-arm');}},{passive:true});
     /* iOS 只认手指松开这一下是「人点的」，相册要在这里打开（按住时打开会被拦） */
     el.addEventListener('touchend',function(e){clearTimeout(t);t=null;el.classList.remove('ph-arm');if(armed){armed=false;suppress=Date.now()+900;e.preventDefault();target=id;input.click();}},{passive:false});
