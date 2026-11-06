@@ -736,7 +736,7 @@ setInterval(async () => {
 
 // 页面加载时：绑定本地真实WAV文件（78KB，iOS认为这是合法音频，激活audio element用）
 // 不用 data URI 也不用 IndexedDB blob——本地文件最可靠，iOS绝对不拒绝
-audio.src = '/unlock.wav';
+/* 11.6 她：点进音乐一会儿就自动放 5 秒空音乐（unlock.wav），不要了。App 里本来就允许自动播放，用不着先解锁 */
 audio.preload = 'auto';
 
 // ====== Cookie工具 ======
@@ -2669,14 +2669,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     // 后台预热koko歌单（切歌时updateKokoBtn能立刻响应）
     ensureKokoPlaylist().catch(() => {});
   }
-  // iOS PWA：首次触摸时用合法src解锁audio
-  document.addEventListener('touchstart', function unlockAudio() {
-    audio.src = getSilentUrl();
-    audio.muted = true;
-    audio.play()
-      .then(() => { audio.pause(); audio.muted = false; })
-      .catch(() => { audio.muted = false; });
-  }, { once: true, passive: true });
+  // 11.6 去掉「首次触摸放一段空音乐解锁」（她不要自动放 5 秒空音乐）
 });
 </script>
 <!-- ====== 侧边栏遮罩 + 侧边栏 ====== -->
