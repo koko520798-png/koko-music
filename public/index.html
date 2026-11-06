@@ -88,12 +88,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .cover-item.far-prev{transform:translate(-50%,-50%) translateX(-146px) perspective(600px) rotateY(28deg) scale(.6);z-index:1} /* 11.6 她：两边放大一点（比中间小）、向内倾斜 */
 .cover-item.far-next{transform:translate(-50%,-50%) translateX(146px) perspective(600px) rotateY(-28deg) scale(.6);z-index:1}
 .cover-item.far-prev .cover-wrap,.cover-item.far-next .cover-wrap{width:150px;height:auto;padding:7px 7px 30px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.12);background:rgb(252,232,237)}
-.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.45}
+.cover-item.far-prev .cover-inner,.cover-item.far-next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.72}
 /* prev/next：实一点，背景不透明，有层级感 */
 .cover-item.prev{transform:translate(-50%,-50%) translateX(-90px) perspective(600px) rotateY(30deg) scale(.77);z-index:2}
 .cover-item.next{transform:translate(-50%,-50%) translateX(90px) perspective(600px) rotateY(-30deg) scale(.77);z-index:2}
 .cover-item.prev .cover-wrap,.cover-item.next .cover-wrap{width:150px;height:auto;padding:7px 7px 36px;border-radius:20px;box-shadow:0 5px 16px rgba(0,0,0,.15);background:rgb(252,232,237)}
-.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.88}
+.cover-item.prev .cover-inner,.cover-item.next .cover-inner{width:136px;height:136px;border-radius:16px;opacity:.94}
 .cover-item.center{transform:translate(-50%,-50%) translateX(0) perspective(600px) rotateY(0deg) scale(.92);opacity:1;z-index:5} /* 11.6 她：整体缩小一点、卡片下半截收一点、最外面两张多露一点 */
 .cover-item.center .cover-wrap{width:150px;height:auto;padding:7px 7px 8px;border-radius:20px;box-shadow:0 12px 32px rgba(0,0,0,.22)}
 .cover-item.center .cover-inner{width:136px;height:136px;border-radius:16px}
@@ -365,11 +365,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 /* 11.6 iOS 音乐那种小框（她：缩小、别下意识弄太大；两行都是歌词；不要⊕；声波放歌时动；进度条粗一点点） */
 .ios-np{margin:4px 40px 0;padding:9px 12px 7px;border-radius:20px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);box-shadow:0 2px 12px rgba(0,0,0,.07);flex-shrink:0;display:flex;flex-direction:column;gap:5px}
 .np-top{display:flex;align-items:center;gap:6px}
-.np-side{flex:none;width:18px;height:18px}
+.np-side{flex:none;width:20px;height:20px}
 .np-text{flex:1;min-width:0;text-align:center}
 .ios-np .lyric-line.active{font-size:13px;font-weight:700;color:var(--text);opacity:1;filter:none;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ios-np .np-sub{font-size:11.5px;font-weight:400;color:var(--text2);opacity:.8;filter:none;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:1px}
-.np-wave{width:18px;height:18px;fill:none;stroke:var(--text2);stroke-width:1.7;stroke-linecap:round;opacity:.55;display:block}
+.np-wave{width:20px;height:20px;fill:none;stroke:#8e8e93;stroke-width:1.5;stroke-linecap:round;opacity:.75;display:block}
 .np-wave line{transform-box:fill-box;transform-origin:center}
 .ios-np.playing .np-wave{opacity:.8}
 .ios-np.playing .np-wave line{animation:npWave 1s ease-in-out infinite}
@@ -387,11 +387,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif
 .np-time{font-size:10.5px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;min-width:30px}
 .np-time:last-child{text-align:right}
 .np-ctrl{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.np-ctrl{padding:2px 2px 0}
 .np-ctrl .ctrl-btn svg{width:17px;height:17px}
-.np-ctrl .skip-btn svg{width:21px;height:21px}
-.np-ctrl .play-btn svg{width:25px;height:25px}
+.np-ctrl .ios-skip,.np-ctrl .ios-play{color:#1c1c1e}
+.np-ctrl .ios-skip svg{width:30px;height:18px;fill:currentColor}
+.np-ctrl .ios-play svg{width:21px;height:27px;fill:currentColor}
+.np-ctrl .ios-list{color:#8e8e93}
+.np-ctrl .ios-list svg{width:20px;height:20px}
 .np-ctrl .fav-circle{width:auto;height:auto}
-.np-ctrl .fav-circle svg{width:17px;height:17px}
+.np-ctrl .fav-circle svg{width:22px;height:22px}
 
 /* 11.6 iOS 音乐胶囊底栏 + 小播放器（她：要和 iOS 音乐一模一样，位置尺寸图标照她截图量的：胶囊左右各 21、离屏幕底 21、高 62；小播放器高 48、跟胶囊隔 8；选中那格是一块灰圆底 98×54） */
 .tab-bar{left:21px!important;right:21px!important;bottom:21px!important;height:62px;padding:4px 5px!important;border-radius:999px;align-items:stretch;box-sizing:border-box;
@@ -513,24 +517,17 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
         <button class="ctrl-btn fav-circle" onclick="toggleFav()" id="favBtn">
           <svg id="favIcon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         </button>
-        <button class="ctrl-btn skip-btn" onclick="prevSong()">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="5.5" width="2.5" height="13" rx="1.25"/>
-            <path d="M9.5 12l8.5 5.5V6.5z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
+        <!-- 11.6 照 iOS 音乐：⏪ ⏸ ⏩ 一样的实心款 -->
+        <button class="ctrl-btn skip-btn ios-skip" onclick="prevSong()" aria-label="上一首">
+          <svg viewBox="0 0 34 20"><path d="M15.2 2.2v15.6c0 .9-1 1.4-1.7.9L2.4 10.9c-.6-.4-.6-1.3 0-1.8L13.5 1.3c.7-.5 1.7 0 1.7.9z"/><path d="M31.6 2.2v15.6c0 .9-1 1.4-1.7.9L18.8 10.9c-.6-.4-.6-1.3 0-1.8l11.1-7.8c.7-.5 1.7 0 1.7.9z"/></svg>
         </button>
-        <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">
-          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
+        <button class="ctrl-btn play-btn ios-play" id="playBtn" onclick="togglePlay()" aria-label="播放/暂停">
+          <svg id="playIcon" viewBox="0 0 22 28"><path d="M3.5 2.6v22.8c0 1.1 1.2 1.8 2.2 1.2l15-11.4c.8-.6.8-1.8 0-2.4l-15-11.4c-1-.6-2.2.1-2.2 1.2z"/></svg>
         </button>
-        <button class="ctrl-btn skip-btn" onclick="nextSong()">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M14.5 12L6 17.5V6.5z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-            <rect x="15.5" y="5.5" width="2.5" height="13" rx="1.25"/>
-          </svg>
+        <button class="ctrl-btn skip-btn ios-skip" onclick="nextSong()" aria-label="下一首">
+          <svg viewBox="0 0 34 20"><path d="M2.4 2.2v15.6c0 .9 1 1.4 1.7.9l11.1-7.8c.6-.4.6-1.3 0-1.8L4.1 1.3c-.7-.5-1.7 0-1.7.9z"/><path d="M18.8 2.2v15.6c0 .9 1 1.4 1.7.9l11.1-7.8c.6-.4.6-1.3 0-1.8L20.5 1.3c-.7-.5-1.7 0-1.7.9z"/></svg>
         </button>
-        <button class="ctrl-btn" onclick="openPlSheet()">
+        <button class="ctrl-btn ios-list" onclick="openPlSheet()" aria-label="播放列表">
           <svg viewBox="0 0 24 24">
             <circle cx="4.5" cy="7" r="1.5"/>
             <line x1="9" y1="7" x2="20" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -1860,8 +1857,8 @@ function togglePlay() {
 }
 function setPlayIcon(playing) {
   document.getElementById('playIcon').innerHTML = playing
-    ? '<rect x="5.5" y="4" width="3.5" height="16" rx="1.75"/><rect x="15" y="4" width="3.5" height="16" rx="1.75"/>'
-    : '<path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    ? '<rect x="2.5" y="1.5" width="6.5" height="25" rx="1.8"/><rect x="13" y="1.5" width="6.5" height="25" rx="1.8"/>'
+    : '<path d="M3.5 2.6v22.8c0 1.1 1.2 1.8 2.2 1.2l15-11.4c.8-.6.8-1.8 0-2.4l-15-11.4c-1-.6-2.2.1-2.2 1.2z"/>';
 }
 // 播放历史栈：记录听过的歌（存curIdx），最多保留50条
 let playHistory = [];
