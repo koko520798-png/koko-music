@@ -421,6 +421,70 @@ body[data-tab]:not([data-tab="play"]) .main{bottom:147px!important}
 .together-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:100%;color:var(--text2);text-align:center;padding:0 32px}
 .te-icon{font-size:40px}.te-title{font-size:17px;font-weight:700;color:var(--text)}.te-sub{font-size:13px}
 
+/* 11.6 晚 新「主页」（音乐里的我）：玻璃卡片、线条图标、分段胶囊。类名 mp- 开头，不碰原来的 my- */
+.mp{padding:6px 16px 24px;color:#1c1c1e}
+.mp-glass{background:rgba(255,255,255,.62);border:.5px solid rgba(255,255,255,.9);-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);box-shadow:0 4px 18px rgba(224,112,144,.10)}
+.mp-me{border-radius:22px;padding:16px}
+.mp-top{display:flex;align-items:center;gap:14px}
+.mp-ava{flex:none;width:64px;height:64px;border-radius:50%;overflow:hidden;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(224,112,144,.18);background:linear-gradient(135deg,var(--pink),var(--pink-deep))}
+.mp-ava img{width:100%;height:100%;object-fit:cover;display:block}
+.mp-name{min-width:0}
+.mp-name b{display:block;font-size:20px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-name span{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);margin-top:3px}
+.mp-name i{font-style:normal}
+.mp-lv{font-style:normal;font-size:10.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--pink),var(--pink-deep));padding:1px 6px;border-radius:999px}
+.mp-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:14px;text-align:center}
+.mp-stats div+div{border-left:.5px solid rgba(224,112,144,.16)}
+.mp-stats b{display:block;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.mp-stats span{font-size:11px;color:var(--text2)}
+.mp-duo{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:.5px solid rgba(224,112,144,.16);font-size:12.5px;color:var(--text2);cursor:pointer}
+.mp-duo-av{position:relative;width:38px;height:22px;flex:none}
+.mp-duo-av i{position:absolute;top:0;width:22px;height:22px;border-radius:50%;background:center/cover;border:1.5px solid #fff}
+.mp-duo-av i.me{left:0;background-image:url(/ph/5-bunny.jpg)}.mp-duo-av i.her{left:16px;background-image:url(/ph/2-cat.jpg)}
+.mp-duo em{margin-left:auto;font-style:normal;color:var(--pink-deep);font-size:15px}
+.mp-quick{display:grid;grid-template-columns:repeat(5,1fr);margin:16px 0 4px}
+.mp-q{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:#1c1c1e;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mp-q i{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.mp-q svg{width:22px;height:22px;stroke:var(--pink-deep);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mp-q:active i{transform:scale(.94)}
+.mp-seg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);height:34px;border-radius:999px;padding:3px;margin:16px 0 12px;--mpi:0}
+.mp-seg-pill{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(224,112,144,.16);transition:transform .25s ease;transform:translateX(calc(var(--mpi)*100%))}
+.mp-seg button{position:relative;z-index:1;font:inherit;font-size:13.5px;font-weight:600;color:var(--text2);background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mp-seg button.on{color:var(--pink-deep)}
+.mp-pane[hidden]{display:none}
+.mp-card{border-radius:20px;padding:14px}
+.mp-fav{display:flex;align-items:center;gap:12px;cursor:pointer}
+.mp-fav-cv{flex:none;width:60px;height:60px;border-radius:14px;background:linear-gradient(140deg,#f7b9cd,#e07090);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(224,112,144,.3)}
+.mp-fav-cv svg{width:28px;height:28px;fill:#fff}
+.mp-fav-t{flex:1;min-width:0}
+.mp-fav-t b{display:block;font-size:15.5px;font-weight:700}.mp-fav-t span{font-size:12.5px;color:var(--text2)}
+.mp-hb{flex:none;display:inline-flex;align-items:center;gap:4px;font:inherit;font-size:12px;font-weight:700;color:#fff;background:var(--pink-deep);border:none;border-radius:999px;padding:6px 11px;cursor:pointer}
+.mp-hb svg{width:11px;height:11px;fill:#fff}
+.mp-st{display:flex;align-items:center;justify-content:space-between;padding:18px 4px 8px}
+.mp-st b{font-size:17px;font-weight:700}
+.mp-st span{font-size:20px;line-height:1;color:var(--pink-deep);cursor:pointer}
+.mp-st small{font-size:12.5px;color:var(--text2);cursor:pointer}
+.mp-row{display:flex;align-items:center;gap:12px;padding:6px 0;cursor:pointer}
+.mp-row+.mp-row{border-top:.5px solid rgba(224,112,144,.16);padding-top:10px;margin-top:4px}
+.mp-cv{flex:none;width:50px;height:50px;border-radius:9px;overflow:hidden;background:rgba(242,168,192,.35)}
+.mp-cv img{width:100%;height:100%;object-fit:cover;display:block}
+.mp-row-t{flex:1;min-width:0}
+.mp-row-t b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-row-t span{display:block;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-new .mp-cv{border:1.5px dashed rgba(224,112,144,.4);background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:22px;font-weight:300}
+.mp-new b{font-weight:500;color:var(--text2)}
+.mp-chev{flex:none;width:8px;height:14px;stroke:#c9bcc2;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mp-eq{flex:none;display:flex;align-items:flex-end;gap:2px;height:14px}
+.mp-eq i{width:3px;height:6px;border-radius:2px;background:var(--pink-deep);animation:mpw 1s ease-in-out infinite}
+.mp-eq i:nth-child(2){animation-delay:.25s}.mp-eq i:nth-child(3){animation-delay:.5s}
+@keyframes mpw{0%,100%{height:4px}50%{height:13px}}
+.mp-empty{text-align:center;padding:26px 0;font-size:13px;color:var(--text2)}
+.mp-empty svg{display:block;margin:0 auto 8px;width:30px;height:30px;stroke:var(--pink);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){.mp-eq i{animation:none;height:9px}.mp-seg-pill{transition:none}}
+@supports (-apple-visual-effect: -apple-system-glass-material-clear){
+  .mp-glass{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important;border-color:transparent!important;
+    -apple-visual-effect:-apple-system-glass-material-clear;}
+}
 /* 11.6 晚「一起听」页（她看了预览说放进家；卡片要液态玻璃）。类名都带 tg- 免得撞上别的页 */
 #page-together{overflow-y:auto;-webkit-overflow-scrolling:touch}
 .tg{padding:6px 16px 24px;color:#1c1c1e}
@@ -2310,34 +2374,46 @@ async function renderMyPage() {
       return;
     }
   }
-  const avatarHtml = userInfo.avatarUrl ? `<img src="${userInfo.avatarUrl}">` : '🎵';
+  // 11.6 晚 她：「主页也设计一版，我不想要现在这个样子了」→ 玻璃卡片 + 线条图标 + 分段胶囊（预览她看过让上线）
+  const avatarHtml = userInfo.avatarUrl ? `<img src="${userInfo.avatarUrl}?param=200y200">` : '';
   el.innerHTML = `
-    <div class="my-header">
-      <div class="my-avatar-img">${avatarHtml}</div>
-      <div class="my-nickname">${userInfo.nickname || ''}</div>
-      <div class="my-badges" id="myBadges">0枚徽章</div>
-      <div class="my-stats">
-        <div class="stat-item"><div class="stat-num" id="statFollows">-</div><div class="stat-label">关注</div></div>
-        <div class="stat-item"><div class="stat-num" id="statFolloweds">-</div><div class="stat-label">粉丝</div></div>
-        <div class="stat-item"><div class="stat-num" id="statLevel">-</div><div class="stat-label">等级</div></div>
-        <div class="stat-item"><div class="stat-num" id="statListen">-</div><div class="stat-label">小时</div></div>
+    <div class="mp">
+      <div class="mp-me mp-glass">
+        <div class="mp-top">
+          <div class="mp-ava">${avatarHtml}</div>
+          <div class="mp-name"><b>${userInfo.nickname || ''}</b><span><em class="mp-lv" id="statLevel">Lv.1</em><i id="myBadges">0 枚徽章</i></span></div>
+        </div>
+        <div class="mp-stats">
+          <div><b id="statFollows">-</b><span>关注</span></div>
+          <div><b id="statFolloweds">-</b><span>粉丝</span></div>
+          <div><b id="statListen">-</b><span>听歌小时</span></div>
+        </div>
+        <div class="mp-duo" onclick="switchTab('together')">
+          <div class="mp-duo-av"><i class="me"></i><i class="her"></i></div>
+          <span>和 kai 一起听</span><em>›</em>
+        </div>
       </div>
-    </div>
-    <div class="my-quick">
-      <div class="q-btn"><div class="q-icon">🕐</div><div class="q-label">最近</div></div>
-      <div class="q-btn"><div class="q-icon">📱</div><div class="q-label">本地</div></div>
-      <div class="q-btn"><div class="q-icon">👑</div><div class="q-label" style="color:var(--pink-deep)">VIP会员</div></div>
-      <div class="q-btn"><div class="q-icon">✨</div><div class="q-label">装扮</div></div>
-      <div class="q-btn"><div class="q-icon" style="font-size:16px">•••</div><div class="q-label">更多</div></div>
-    </div>
-    <div class="my-tabs">
-      <div class="my-tab active">音乐</div>
-      <div class="my-tab">播客</div>
-      <div class="my-tab">笔记</div>
-    </div>
-    <div class="my-playlist-area">
-      <div id="myPlaylists"><div style="padding:24px;text-align:center;color:var(--text2)">⏳ 加载歌单…</div></div>
+      <div class="mp-quick">
+        <div class="mp-q" onclick="openRecentSheet()"><i class="mp-glass"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i>最近</div>
+        <div class="mp-q"><i class="mp-glass"><svg viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg></i>本地</div>
+        <div class="mp-q"><i class="mp-glass"><svg viewBox="0 0 24 24"><path d="M4 8l4 4 4-6 4 6 4-4-1.5 10h-13z"/></svg></i>会员</div>
+        <div class="mp-q"><i class="mp-glass"><svg viewBox="0 0 24 24"><path d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7L5.5 10l4.7-1.8z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg></i>装扮</div>
+        <div class="mp-q"><i class="mp-glass"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="18" cy="12" r=".6"/></svg></i>更多</div>
+      </div>
+      <div class="mp-seg mp-glass" id="mpSeg">
+        <div class="mp-seg-pill"></div>
+        <button class="on" type="button" onclick="mpSeg(0)">音乐</button>
+        <button type="button" onclick="mpSeg(1)">播客</button>
+        <button type="button" onclick="mpSeg(2)">笔记</button>
+      </div>
+      <div class="mp-pane" id="mpP0">
+        <div id="myPlaylists"><div class="mp-card mp-glass mp-empty">加载歌单…</div></div>
+        <div id="mpRecent"></div>
+      </div>
+      <div class="mp-pane" id="mpP1" hidden><div class="mp-card mp-glass mp-empty"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>还没有订阅的播客</div></div>
+      <div class="mp-pane" id="mpP2" hidden><div class="mp-card mp-glass mp-empty"><svg viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6z"/><path d="M9 11h6M9 14.5h6M9 18h3.5"/></svg>还没有写笔记</div></div>
     </div>`;
+  mpRenderRecent();
 
   // 异步加载用户详情（等级/关注/粉丝/听歌时长）
   try {
@@ -2347,7 +2423,7 @@ async function renderMyPage() {
       document.getElementById('statFolloweds').textContent = d2.profile.followeds ?? 0;
       document.getElementById('statLevel').textContent = 'Lv.' + (d2.profile.level || 1);
       const hrs = Math.round((d2.listenSongs || 0) * 3 / 60);
-      document.getElementById('statListen').textContent = hrs + '小时';
+      document.getElementById('statListen').textContent = hrs;
 
     }
   } catch(e) {}
@@ -2357,7 +2433,7 @@ async function renderMyPage() {
     const d = await api('/user/playlist', { uid: userInfo.userId, limit: 30 });
     const lists = d.playlist || [];
     if (!lists.length) {
-      document.getElementById('myPlaylists').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2)">暂无歌单</div>';
+      document.getElementById('myPlaylists').innerHTML = '<div class="mp-card mp-glass mp-empty">暂无歌单</div>';
       return;
     }
     const favPl = lists[0];
@@ -2365,29 +2441,40 @@ async function renderMyPage() {
     // 用全局数组存歌单信息避免onclick里特殊字符问题
     window._myPlaylists = lists;
     document.getElementById('myPlaylists').innerHTML = `
-      <div class="my-fav-row" onclick="loadPlaylist(window._myPlaylists[0].id, window._myPlaylists[0].name)">
-        <div class="my-fav-cover">❤️</div>
-        <div class="my-fav-info">
-          <div class="my-fav-name">${favPl.name}</div>
-          <div class="my-fav-count">${favPl.trackCount} 首</div>
-        </div>
-        <div class="my-fav-mode">♡ 心动模式</div>
+      <div class="mp-card mp-glass mp-fav" onclick="loadPlaylist(window._myPlaylists[0].id, window._myPlaylists[0].name)">
+        <div class="mp-fav-cv"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+        <div class="mp-fav-t"><b>我喜欢的音乐</b><span>${favPl.trackCount} 首</span></div>
+        <button class="mp-hb" type="button"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>心动模式</button>
       </div>
-      ${otherPls.map((pl, i) => `
-      <div class="my-pl-item" onclick="loadPlaylist(window._myPlaylists[${i+1}].id, window._myPlaylists[${i+1}].name)">
-        <div class="my-pl-cover">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=200y200">` : '🎵'}</div>
-        <div class="my-pl-info">
-          <div class="my-pl-name">${pl.name}</div>
-          <div class="my-pl-desc">歌单 · ${pl.trackCount}首 · ${pl.creator?.nickname || ''}</div>
-        </div>
-      </div>`).join('')}
-      <div class="my-new-btn">
-        <div class="my-new-icon">＋</div>
-        <div style="font-size:14px;color:var(--text2)">新建歌单</div>
+      <div class="mp-st"><b>我的歌单</b><span>+</span></div>
+      <div class="mp-card mp-glass">
+        ${otherPls.map((pl, i) => `
+        <div class="mp-row" onclick="loadPlaylist(window._myPlaylists[${i+1}].id, window._myPlaylists[${i+1}].name)">
+          <div class="mp-cv">${pl.coverImgUrl ? `<img src="${pl.coverImgUrl}?param=200y200">` : ''}</div>
+          <div class="mp-row-t"><b>${pl.name}</b><span>歌单 · ${pl.trackCount} 首</span></div><svg class="mp-chev" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6"/></svg>
+        </div>`).join('')}
+        <div class="mp-row mp-new"><div class="mp-cv">+</div><div class="mp-row-t"><b>新建歌单</b></div></div>
       </div>`;
   } catch(e) {
-    document.getElementById('myPlaylists').innerHTML = '<div style="padding:24px;text-align:center;color:var(--text2)">加载失败</div>';
+    document.getElementById('myPlaylists').innerHTML = '<div class="mp-card mp-glass mp-empty">加载失败</div>';
   }
+}
+
+// 11.6 晚 新主页：分段胶囊、最近在听（当前这首 + 刚听过的）
+function mpSeg(i){
+  const seg=document.getElementById('mpSeg');if(!seg)return;
+  seg.querySelectorAll('button').forEach((b,k)=>b.classList.toggle('on',k===i));
+  seg.style.setProperty('--mpi',i);
+  for(let k=0;k<3;k++){const p=document.getElementById('mpP'+k);if(p)p.hidden=(k!==i);}
+}
+function mpRenderRecent(){
+  const box=document.getElementById('mpRecent');if(!box)return;
+  const idxs=[];const push=i=>{if(playlist[i]&&!idxs.includes(i))idxs.push(i);};
+  push(curIdx);for(let k=playHistory.length-1;k>=0&&idxs.length<3;k--)push(playHistory[k]);
+  if(!idxs.length){box.innerHTML='';return;}
+  const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  box.innerHTML='<div class="mp-st"><b>最近在听</b><small onclick="openRecentSheet()">全部 ›</small></div><div class="mp-card mp-glass">'+
+    idxs.map(i=>{const s=playlist[i];return '<div class="mp-row" onclick="playSongAt('+i+')"><div class="mp-cv">'+(s.cover?'<img src="'+esc(s.cover)+'?param=100y100">':'')+'</div><div class="mp-row-t"><b>'+esc(s.name)+'</b><span>'+esc(s.artist)+'</span></div>'+(i===curIdx?'<div class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></div>':'<svg class="mp-chev" viewBox="0 0 8 14"><path d="M1 1l6 6-6 6"/></svg>')+'</div>';}).join('')+'</div>';
 }
 
 async function loadPlaylist(id, name) {
